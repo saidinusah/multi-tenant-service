@@ -1,7 +1,6 @@
 import {
   ArrayMinSize,
   IsArray,
-  isNotEmpty,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -43,5 +42,5 @@ export class UserRoles {
   @IsOptional()
   @IsNumber()
   @IsPositive()
-  id?: number;
+  id: number;
 }

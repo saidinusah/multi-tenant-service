@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { CreateRoleDTO } from './dto/create-role.dto';
-import { FindOneParam } from 'src/helpers/generic-dto';
+import { FindOneParam } from 'src/utils/generic-dto';
 
 @Controller('roles')
 export class RolesController {

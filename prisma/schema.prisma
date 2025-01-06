@@ -19,22 +19,27 @@ model Organization {
   ghanaPostGPS         String                 @unique @map("ghana_post_gps")
   createdAt            DateTime               @default(now()) @map("created_at")
   updatedAt            DateTime               @default(now()) @map("updated_at")
-  phoneNumber         String                 @unique @map("phone_number")
-  email                String?                @unique
-  UsersOnOrganizations UsersOnOrganizations[]
+  phoneNumber          String                 @unique @map("phone_number")
+  email                String              @unique
+  users UsersOnOrganizations[]
+  branches             Branch[]
+  onboardReference     String?                @map("onboard_reference")
 
   @@map("organizations")
 }
 
 model User {
-  id                   Int                    @id @default(autoincrement())
-  firstName            String                 @map("first_name")
-  lastName             String                 @map("last_name")
-  title                String?
-  email                String?
-  phoneNumber          String?                @map("phone_number")
-  roles                UsersOnRoles[]
-  UsersOnOrganizations UsersOnOrganizations[]
+  id            Int                    @id @default(autoincrement())
+  firstName     String                 @map("first_name")
+  lastName      String                 @map("last_name")
+  title         String?
+  email         String                @unique
+  phoneNumber   String                @map("phone_number")
+  roles         UsersOnRoles[]
+  organizations UsersOnOrganizations[]
+
+  branch_id Int?
+  branch    Branch? @relation(fields: [branch_id], references: [id])
 
   @@map("users")
 }
@@ -52,8 +57,8 @@ model Role {
 }
 
 model UsersOnRoles {
-  role Role @relation(fields: [roleId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id],onDelete: Restrict,onUpdate: Cascade)
+  user User @relation(fields: [userId], references: [id],onDelete: Restrict,onUpdate: Cascade)
 
   userId Int @map("user_id")
   roleId Int @map("role_id")
@@ -63,11 +68,28 @@ model UsersOnRoles {
 }
 
 model UsersOnOrganizations {
-  organization    Organization @relation(fields: [organization_id], references: [id])
-  user            User         @relation(fields: [user_id], references: [id])
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user            User         @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
   organization_id Int          @map("organizationId")
   user_id         Int          @map("userId")
 
   @@id([user_id, organization_id])
   @@map("organization_user")
+}
+
+enum BranchType {
+  HEAD_OFFICE
+  SUB
+}
+
+model Branch {
+  id              Int          @id @default(autoincrement())
+  type            BranchType
+  ghanaPostGPS    String       @unique
+  organization_id Int
+  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  phoneNumber     String?
+  users           User[]
+
+  @@map("branches")
 }
