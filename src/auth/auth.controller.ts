@@ -1,8 +1,17 @@
-import { Body, Controller, Param, Patch, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
 import { CreateOrganizationDTO } from "src/organizations/dtos/create-organization.dto";
 import { CreateUserDTO } from "src/users/dtos/create-user.dto";
 import { AuthService } from "./auth.service";
 import { RequestOTP, VerifyOTP } from "./dto/otp.dto";
+import { HasProfileGuard } from "./guards/HasProfile";
 
 @Controller("auth")
 export class AuthController {
@@ -37,6 +46,8 @@ export class AuthController {
 
   // login
   @Post("/otp/request")
+  @HttpCode(200)
+  @UseGuards(HasProfileGuard)
   async requestOtp(@Body() data: RequestOTP) {
     return await this.authService.requestOtp(data);
   }
