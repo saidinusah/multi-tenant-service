@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
-import { OrganizationController } from './organization.controller';
-import { OrganizationService } from './organization.service';
-import { PrismaService } from 'src/services/prisma.service';
+import { Module } from "@nestjs/common";
+import { OrganizationController } from "./organization.controller";
+import { OrganizationService } from "./organization.service";
+import { PrismaService } from "src/services/prisma.service";
 
 @Module({
   providers: [OrganizationService, PrismaService],

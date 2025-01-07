@@ -1,34 +1,42 @@
+import { Transform } from "class-transformer";
 import {
   IsEmail,
   IsNotEmpty,
-  isNotEmpty,
   IsPhoneNumber,
   IsString,
-} from 'class-validator';
+  Matches,
+} from "class-validator";
+import { REGEXES } from "src/utils/constants";
 
 export class CreateOrganizationDTO {
   @IsString()
   @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
   name: string;
 
   @IsString()
   @IsNotEmpty()
+  @Matches(REGEXES.GHANA_POST_GPS, {
+    message: "Please enter a valid Ghana Post GPS code",
+  })
   ghanaPostGPS: string;
 
   @IsString()
   @IsNotEmpty()
-  @IsPhoneNumber('GH')
+  @IsPhoneNumber("GH")
+  // @Transform(({ value }) => value?.replace(/\s+/g, ''))
   phoneNumber: string;
 
   @IsEmail()
-  email?: string;
+  @Transform(({ value }) => value?.toLowerCase().trim())
+  email: string;
 
-  remappedForWriting() {
-    return {
-      phone_number: this.phoneNumber,
-      email: this.email,
-      ghana_post_gps: this.ghanaPostGPS,
-      name: this.name,
-    };
-  }
+  // toDatabaseModel() {
+  //   return {
+  //     phone_number: this.phoneNumber,
+  //     email: this.email,
+  //     ghana_post_gps: this.ghanaPostGPS,
+  //     name: this.name,
+  //   };
+  // }
 }

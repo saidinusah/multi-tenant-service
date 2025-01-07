@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Injectable, Post } from '@nestjs/common';
-import { PrismaService } from 'src/services/prisma.service';
-import { UserService } from './user.service';
-import { CreateUserDTO } from './dtos/create-user.dto';
+import { Body, Controller, Get, Injectable, Post } from "@nestjs/common";
+import { PrismaService } from "src/services/prisma.service";
+import { UserService } from "./user.service";
+import { CreateUserDTO } from "./dtos/create-user.dto";
 
-@Controller('users')
+@Controller("users")
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -15,6 +15,6 @@ export class UserController {
   @Post()
   async createUser(@Body() data: CreateUserDTO) {
     await this.userService.createNewUser(data);
-    return { message: 'stored user successfully' };
+    return { message: "stored user successfully" };
   }
 }

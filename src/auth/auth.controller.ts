@@ -1,21 +1,24 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
-import { CreateUserDTO } from 'src/users/dtos/create-user.dto';
-import { AuthService } from './auth.service';
-import { CreateOrganizationDTO } from 'src/organizations/dtos/create-organization.dto';
-import { VerifyOTP } from './dto/otp.dto';
+import { Body, Controller, Param, Patch, Post } from "@nestjs/common";
+import { CreateOrganizationDTO } from "src/organizations/dtos/create-organization.dto";
+import { CreateUserDTO } from "src/users/dtos/create-user.dto";
+import { AuthService } from "./auth.service";
+import { RequestOTP, VerifyOTP } from "./dto/otp.dto";
 
-@Controller('auth')
+@Controller("auth")
 export class AuthController {
   constructor(private authService: AuthService) {}
-  @Post('/signup/user')
+
+  // create new user
+  @Post("/signup/user")
   async signUpAsUser(@Body() userData: CreateUserDTO) {
     return await this.authService.createUser(userData);
   }
 
-  @Patch('/signup/:reference/organization')
+  // add organization details
+  @Patch("/signup/:reference/organization")
   async signUpAsOrganization(
     @Body() organizationData: CreateOrganizationDTO,
-    @Param('reference') reference: string,
+    @Param("reference") reference: string,
   ) {
     return await this.authService.createOrganization(
       organizationData,
@@ -23,11 +26,18 @@ export class AuthController {
     );
   }
 
-  @Patch('/signup/:reference/confirm')
+  // verify contact and confirm onboarding
+  @Patch("/signup/:reference/confirm")
   async confirmOnboarding(
-    @Param('reference') reference: string,
+    @Param("reference") reference: string,
     @Body() verifyOtpData: VerifyOTP,
   ) {
     return await this.authService.completeOnboarding(reference, verifyOtpData);
+  }
+
+  // login
+  @Post("/otp/request")
+  async requestOtp(@Body() data: RequestOTP) {
+    return await this.authService.requestOtp(data);
   }
 }

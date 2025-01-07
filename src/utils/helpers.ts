@@ -1,5 +1,5 @@
 export function okResponse(message?: string) {
-  return { message: message ?? 'Resource saved successfully' };
+  return { message: message ?? "Resource saved successfully" };
 }
 
 export function generateOrganizationCacheKey(reference: string) {

@@ -1,8 +1,9 @@
 import {
   BadRequestException,
   UnprocessableEntityException,
-} from '@nestjs/common';
-import { ofetch } from 'ofetch';
+} from "@nestjs/common";
+import { ofetch } from "ofetch";
+import { SMS_TEMPLATE } from "src/utils/constants";
 
 export class OTPService {
   private PROVIDER_BASE_URL = process.env.ARKESEL_URL;
@@ -11,16 +12,16 @@ export class OTPService {
   private SEND_OTP_PAYLOAD = {
     expiry: 2,
     length: 6,
-    medium: 'sms',
-    message: 'This is your GyManager OTP, %otp_code%. It expires in 2 minutes',
+    medium: "sms",
+    message: SMS_TEMPLATE.OTP,
     sender_id: this.SENDER_ID,
-    type: 'numeric',
+    type: "numeric",
   };
   private HEADERS = {
-    'api-key': this.PROVIDER_API_KEY,
-    'Content-Type': 'application/json',
+    "api-key": this.PROVIDER_API_KEY,
+    "Content-Type": "application/json",
   };
-  private exception_message = 'An error occurred while processing your request';
+  private exception_message = "An error occurred while processing your request";
 
   async sendOtp(phoneNumber: string) {
     try {
@@ -29,17 +30,17 @@ export class OTPService {
         ussd_code: string;
         message: string;
       }>(`${this.PROVIDER_BASE_URL}/otp/generate`, {
-        method: 'POST',
+        method: "POST",
         body: { ...this.SEND_OTP_PAYLOAD, number: phoneNumber },
         headers: this.HEADERS,
       });
 
-      if (code !== '1000') {
+      if (code !== "1000") {
         throw new BadRequestException(this.exception_message);
       }
       return {
         message:
-          'OTP has been successfully sent, please check your messaging app',
+          "OTP has been successfully sent, please check your messaging app",
         phoneNumber,
         ussd_code: ussd_code,
       };
@@ -57,14 +58,12 @@ export class OTPService {
       }>(`${this.PROVIDER_BASE_URL}/otp/verify`, {
         body: { number: phoneNumber, code },
         headers: this.HEADERS,
-        method: 'POST',
+        method: "POST",
       });
-      // logger.debug(`response code ${responseCode}`);
-      // logger.debug(`message ${message} `);
 
-      if (responseCode !== '1100') {
+      if (responseCode !== "1100") {
         throw new UnprocessableEntityException(
-          'An error occurred while processing your request',
+          "An error occurred while processing your request",
         );
       }
       return { isVerified: true };

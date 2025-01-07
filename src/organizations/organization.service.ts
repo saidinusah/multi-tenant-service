@@ -1,6 +1,6 @@
-import { PrismaService } from 'src/services/prisma.service';
-import { CreateOrganizationDTO } from './dtos/create-organization.dto';
-import { Injectable } from '@nestjs/common';
+import { PrismaService } from "src/services/prisma.service";
+import { CreateOrganizationDTO } from "./dtos/create-organization.dto";
+import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class OrganizationService {
@@ -19,7 +19,7 @@ export class OrganizationService {
         email: reqData.email,
       },
     });
-    return { message: 'Saved organization successfully' };
+    return { message: "Saved organization successfully" };
   }
 
   async updateOrganization(reqData: CreateOrganizationDTO, id: number) {
@@ -33,6 +33,6 @@ export class OrganizationService {
       },
     });
 
-    return { message: 'Updated organization successfully' };
+    return { message: "Updated organization successfully" };
   }
 }

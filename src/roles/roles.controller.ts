@@ -6,14 +6,15 @@ import {
   Param,
   Post,
   Put,
-} from '@nestjs/common';
-import { RolesService } from './roles.service';
-import { CreateRoleDTO } from './dto/create-role.dto';
-import { FindOneParam } from 'src/utils/generic-dto';
+} from "@nestjs/common";
+import { RolesService } from "./roles.service";
+import { CreateRoleDTO } from "./dto/create-role.dto";
+import { FindOneParam } from "src/utils/generic-dto";
 
-@Controller('roles')
+@Controller("roles")
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
+
   @Get()
   async fetchRoles() {
     return await this.rolesService.getAllRoles();
@@ -22,19 +23,19 @@ export class RolesController {
   @Post()
   async createNewRole(@Body() reqData: CreateRoleDTO) {
     await this.rolesService.store(reqData);
-    return { message: 'Saved role successfully' };
+    return { message: "Saved role successfully" };
   }
 
-  @Put(':id')
-  async updateRole(@Body() reqData: CreateRoleDTO, @Param('id') id: number) {
+  @Put(":id")
+  async updateRole(@Body() reqData: CreateRoleDTO, @Param("id") id: number) {
     await this.rolesService.updateRole(reqData, id);
 
-    return { message: 'Updated role successfully' };
+    return { message: "Updated role successfully" };
   }
 
-  @Delete(':id')
-  async deleteRole(@Param('id') id: number) {
+  @Delete(":id")
+  async deleteRole(@Param("id") id: number) {
     await this.rolesService.deleteRole(id);
-    return { message: 'Deleted role successfully' };
+    return { message: "Deleted role successfully" };
   }
 }

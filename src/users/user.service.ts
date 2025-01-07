@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/services/prisma.service';
-import { CreateUserDTO } from './dtos/create-user.dto';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "src/services/prisma.service";
+import { CreateUserDTO } from "./dtos/create-user.dto";
 
 @Injectable()
 export class UserService {
@@ -15,18 +15,7 @@ export class UserService {
       data: {
         ...data,
         roles: {
-          create: data?.roles?.map((role) => ({
-            role: {
-              connectOrCreate: {
-                where: {
-                  id: role.id,
-                },
-                create: {
-                  name: role.name,
-                },
-              },
-            },
-          })),
+          connect: data?.roles?.map((role) => ({ id: role.id })),
         },
       },
     });
