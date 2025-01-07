@@ -15,6 +15,9 @@ import { PrismaService } from "src/services/prisma.service";
 import { CreateUserDTO } from "src/users/dtos/create-user.dto";
 import { generateOrganizationCacheKey } from "src/utils/helpers";
 import { RequestOTP, VerifyOTP } from "./dto/otp.dto";
+import { InjectQueue } from "@nestjs/bull";
+import { JobNames, QueueNames } from "../utils/constants";
+import { Queue } from "bull";
 
 const CACHE_EXPIRY = 60 * 1000 * 3600;
 
@@ -25,6 +28,8 @@ export class AuthService {
     private prismaService: PrismaService,
     private otpService: OTPService,
     private jwtService: JwtService,
+    @InjectQueue(QueueNames.NOTIFICATION)
+    private readonly notificationQueue: Queue,
   ) {}
 
   async createUser(data: CreateUserDTO) {
@@ -44,7 +49,13 @@ export class AuthService {
       CACHE_EXPIRY,
     );
     const userData: CreateUserDTO = await this.cacheManger.get(reference);
-    return await this.otpService.sendOtp(userData.phoneNumber);
+    await this.notificationQueue.add(JobNames.NOTIFICATION.SEND_OTP, {
+      phoneNumber: userData.phoneNumber,
+    });
+    return {
+      message:
+        "OTP has been successfully sent, please check your messaging app",
+    };
   }
 
   async completeOnboarding(reference: string, otpData: VerifyOTP) {
@@ -93,14 +104,12 @@ export class AuthService {
         },
       });
 
-      const updatedUser = this.prismaService.user.update({
+      return await this.prismaService.user.update({
         where: { id: user.id },
         data: {
           branch_id: user?.organizations[0]?.branches[0].id,
         },
       });
-
-      return updatedUser;
     });
 
     await this.cacheManger.del(reference);
@@ -112,6 +121,6 @@ export class AuthService {
   }
 
   async requestOtp(data: RequestOTP) {
-    await this.otpService.sendOtp(data.phoneNumber);
+    return await this.otpService.sendOtp(data.phoneNumber);
   }
 }

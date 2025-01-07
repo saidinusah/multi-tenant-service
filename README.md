@@ -5,7 +5,7 @@ There's also organization/branch management to make your life easier in handling
 
 
 ## TO DO
-- [ ] Add decorator to check if user exists before sending/verifying otp
+- [ ] Add guard to check if user exists before sending/verifying otp
 - [ ] JWT token generation
 - [ ] Set up queue to handle sending of notification/messages
 - [ ] Cleanup after onboarding user
