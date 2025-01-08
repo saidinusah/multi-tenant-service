@@ -4,6 +4,7 @@ import { ConfigModule } from "@nestjs/config";
 import { AuthModule } from "./auth/auth.module";
 import { NotificationProcessor } from "./jobs/notification.job";
 import { OrganizationModule } from "./organizations/organization.module";
+import { PermissionsModule } from "./permissions/permissions.module";
 import { RoleModule } from "./roles/roles.module";
 import { UserModule } from "./users/user.module";
 import { validate } from "./utils/env.validation";
@@ -25,6 +26,7 @@ import { validate } from "./utils/env.validation";
     RoleModule,
     OrganizationModule,
     AuthModule,
+    PermissionsModule,
   ],
   controllers: [],
   providers: [NotificationProcessor],
