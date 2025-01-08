@@ -30,7 +30,6 @@ export class HasProfileGuard implements CanActivate {
         throw new BadRequestException("Invalid phone number");
       }
     } catch (error) {
-      console.log(error);
       throw new BadRequestException("Invalid phone number");
     }
 
