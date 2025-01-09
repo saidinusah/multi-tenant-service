@@ -8,7 +8,7 @@ There's also organization/branch management to make your life easier in handling
 - [x] Add guard to check if user exists before sending/verifying otp
 - [x] JWT token generation
 - [x] Set up queue to handle sending of notification/messages
-  - [ ] Send OTP Messages
+  - [x] Send OTP Messages
   - [ ] Send successful onboarding sms/email??
 - [ ] Cleanup after onboarding user
 - [ ] Roles and permission
@@ -22,6 +22,7 @@ There's also organization/branch management to make your life easier in handling
 - [ ] Exception Filter
 - [x] AuthenticationGuard
 - [ ] Logging
+- [x] Complete onboarding 
 
 
 ## Description
