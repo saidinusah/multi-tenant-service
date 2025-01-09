@@ -37,6 +37,10 @@ export class EnvValidation {
   @IsString()
   @IsNotEmpty()
   REDIS_HOST: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_SECRET: string;
 }
 
 export const validate = (config: Record<string, unknown>) => {

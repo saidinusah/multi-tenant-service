@@ -21,22 +21,13 @@ export class CreateOrganizationDTO {
   })
   ghanaPostGPS: string;
 
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   @IsPhoneNumber("GH")
-  // @Transform(({ value }) => value?.replace(/\s+/g, ''))
   phoneNumber: string;
 
+  @IsNotEmpty()
   @IsEmail()
   @Transform(({ value }) => value?.toLowerCase().trim())
   email: string;
-
-  // toDatabaseModel() {
-  //   return {
-  //     phone_number: this.phoneNumber,
-  //     email: this.email,
-  //     ghana_post_gps: this.ghanaPostGPS,
-  //     name: this.name,
-  //   };
-  // }
 }

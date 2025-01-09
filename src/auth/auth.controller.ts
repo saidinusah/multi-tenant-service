@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Param,
   Patch,
@@ -11,7 +12,8 @@ import { CreateOrganizationDTO } from "src/organizations/dtos/create-organizatio
 import { CreateUserDTO } from "src/users/dtos/create-user.dto";
 import { AuthService } from "./auth.service";
 import { RequestOTP, VerifyOTP } from "./dto/otp.dto";
-import { HasProfileGuard } from "./guards/HasProfile";
+import { HasProfileGuard } from "./guards/has-profile.guard";
+import { AuthGuard } from "./guards/auth.guard";
 
 @Controller("auth")
 export class AuthController {
@@ -50,5 +52,17 @@ export class AuthController {
   @UseGuards(HasProfileGuard)
   async requestOtp(@Body() data: RequestOTP) {
     return await this.authService.requestOtp(data);
+  }
+
+  @Post("/login")
+  @UseGuards(HasProfileGuard)
+  async login(@Body() data: VerifyOTP) {
+    return await this.authService.login(data);
+  }
+
+  @Get("/me")
+  @UseGuards(AuthGuard)
+  async getLoggedInUserDetails() {
+    return await this.authService.getLoggedInUserDetails();
   }
 }

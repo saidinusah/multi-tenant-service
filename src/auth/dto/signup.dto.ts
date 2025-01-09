@@ -1,5 +1,4 @@
-import { IsNotEmpty, IsString, Matches } from 'class-validator';
-import { CreateUserDTO } from 'src/users/dtos/create-user.dto';
+import { IsNotEmpty, IsString } from "class-validator";
 
 export class SignUp {
   @IsString()
