@@ -14,16 +14,15 @@ datasource db {
 }
 
 model Organization {
-  id               Int      @id @default(autoincrement())
-  name             String
-  ghanaPostGPS     String   @unique @map("ghana_post_gps")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @default(now()) @map("updated_at")
-  phoneNumber      String   @unique @map("phone_number")
-  email            String   @unique
-  users            User[]
-  branches         Branch[]
-  onboardReference String?  @map("onboard_reference")
+  id           Int      @id @default(autoincrement())
+  name         String
+  ghanaPostGPS String   @unique @map("ghana_post_gps")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @map("updated_at")
+  phoneNumber  String   @unique @map("phone_number")
+  email        String   @unique
+  users        User[]
+  branches     Branch[]
 
   @@map("organizations")
 }
@@ -37,12 +36,11 @@ model User {
   phoneNumber   String         @map("phone_number")
   roles         Role[]
   organizations Organization[]
+  // permissions   Permissions[]
+  branches      Branch[]
 
-  branch_id Int?
-  branch    Branch? @relation(fields: [branch_id], references: [id])
-
-createdAt DateTime @map("created_at") @default(now())
-updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt
 
   @@map("users")
 }
@@ -55,6 +53,7 @@ model Role {
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at")
+  // Permissions Permissions[]
 
   @@map("roles")
 }
@@ -73,5 +72,18 @@ model Branch {
   phoneNumber     String?
   users           User[]
 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at")
+
   @@map("branches")
 }
+
+// model Permissions {
+//   id     Int    @id @default(autoincrement())
+//   name   String
+//   role   Role?  @relation(fields: [roleId], references: [id])
+//   roleId Int?   @map("role_id")
+//   user   User?  @relation(fields: [userId], references: [id])
+//   userId Int?   @map("user_id")
+
+// }
