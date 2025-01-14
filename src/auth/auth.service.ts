@@ -186,6 +186,11 @@ export class AuthService {
         phoneNumber: phoneNumber,
       },
       include: {
+        roles: {
+          select: {
+            name: true,
+          },
+        },
         organizations: {
           where: {
             users: {
