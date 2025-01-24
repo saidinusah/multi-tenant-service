@@ -7,45 +7,49 @@ import {
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
 
+type ValidationErrorResult = {
+  message: string;
+  errors: Array<{ field: string; errors: Array<string> }>;
+};
+
 @Injectable()
 export class AppValidationPipe implements PipeTransform {
+  validationErrors: ValidationErrorResult = {
+    message: "The given data was invalid",
+    errors: [],
+  };
   async transform(value: any, { metatype }: ArgumentMetadata) {
-    if (!metatype || !this.toValidate(metatype)) {
-      return value;
-    }
-
     const object = plainToInstance(metatype, value);
     const requestErrors = await validate(object);
-    console.log({ object, requestErrors });
-    if (requestErrors?.length > 0) {
-      const mappedErrors = requestErrors?.map((item: ValidationError) => {
-        const fieldErrors = [];
-        for (const constraint in item.constraints) {
-          // console.log({ constraint });
-          // if(item.children?.length > 0 ){
-          //   item.children?.map((child)=>{
-          //     child.
-          //   })
-          // }
-          fieldErrors.push(item.constraints[constraint]);
-        }
+    if (requestErrors?.length) {
+      this.validationErrors.errors = [];
+      this.formatFormErrors(requestErrors);
+      const { errors, message } = this.validationErrors;
 
-        return {
-          ...item,
-          field: item.property,
-          errors: fieldErrors,
-        };
-      });
       throw new UnprocessableEntityException({
-        errors: mappedErrors,
-        message: "Request validation failed",
+        errors: errors,
+        message,
       });
     }
     return value;
   }
 
-  public toValidate(metatype: Function): boolean {
-    const types: Function[] = [String, Boolean, Number, Array, Object];
-    return !types.includes(metatype);
+  private formatFormErrors(formErrors: Array<ValidationError>, parent = "") {
+    formErrors.forEach((item) => {
+      const field = parent ? `${parent}.${item.property}` : item.property;
+      const errors: Array<string> = [];
+      const children = item.children;
+
+      for (const key in item.constraints) {
+        errors.push(item.constraints[key]);
+      }
+
+      if (children?.length) {
+        this.formatFormErrors(children, field);
+      }
+      if (errors?.length) {
+        this.validationErrors.errors.push({ field, errors });
+      }
+    });
   }
 }
