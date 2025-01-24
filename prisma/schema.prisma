@@ -46,8 +46,8 @@ model User {
 }
 
 model Role {
-  id   Int    @id @default(autoincrement())
-  name String @unique()
+  id   Int   @id @default(autoincrement())
+  name Roles @unique()
 
   users User[]
 
@@ -87,3 +87,9 @@ model Branch {
 //   userId Int?   @map("user_id")
 
 // }
+enum Roles {
+  SUPER_ADMIN
+  BACKOFFICE_ADMIN
+  MEMBER
+  TRAINER
+}

@@ -7,6 +7,8 @@ import { OrganizationModule } from "./organizations/organization.module";
 import { RoleModule } from "./roles/roles.module";
 import { UserModule } from "./users/user.module";
 import { validate } from "./utils/env.validation";
+import { APP_FILTER } from "@nestjs/core";
+import { AppExceptionFilter } from "./filters/base.filter";
 
 @Module({
   imports: [
@@ -27,6 +29,9 @@ import { validate } from "./utils/env.validation";
     AuthModule,
   ],
   controllers: [],
-  providers: [NotificationProcessor],
+  providers: [
+    NotificationProcessor,
+    // { provide: APP_FILTER, useClass: AppExceptionFilter },
+  ],
 })
 export class AppModule {}

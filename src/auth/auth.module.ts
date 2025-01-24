@@ -7,8 +7,6 @@ import { PrismaService } from "src/services/prisma.service";
 import { QueueNames } from "../utils/constants";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { UserModule } from "src/users/user.module";
-import { OrganizationModule } from "src/organizations/organization.module";
 
 @Module({
   controllers: [AuthController],
