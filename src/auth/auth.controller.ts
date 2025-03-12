@@ -14,6 +14,7 @@ import { AuthService } from "./auth.service";
 import { RequestOTP, VerifyOTP } from "./dto/otp.dto";
 import { HasProfileGuard } from "./guards/has-profile.guard";
 import { AuthGuard } from "./guards/auth.guard";
+import { AdminLogin } from "./dto/auth.dto";
 
 @Controller("auth")
 export class AuthController {
@@ -43,7 +44,10 @@ export class AuthController {
     @Param("reference") reference: string,
     @Body() verifyOtpData: VerifyOTP,
   ) {
-    return await this.authService.completeOnboarding(reference, verifyOtpData);
+    // return await this.authService.completeOnboarding(reference, verifyOtpData);
+    return {
+      message: "Confirmed",
+    };
   }
 
   // login
@@ -64,5 +68,10 @@ export class AuthController {
   @UseGuards(AuthGuard)
   async getLoggedInUserDetails() {
     return await this.authService.getLoggedInUserDetails();
+  }
+
+  @Post("/admin/login")
+  async authenticatedAdmin(@Body() data: AdminLogin) {
+    return await this.authService.loginAsAdmin(data);
   }
 }

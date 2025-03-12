@@ -10,11 +10,10 @@ import {
 } from "@nestjs/common";
 
 import { JwtService } from "@nestjs/jwt";
-import { User } from "@prisma/client";
+import { Admin, User } from "@prisma/client";
 import { Queue } from "bull";
 import { Cache } from "cache-manager";
 import { addSeconds } from "date-fns";
-import { nanoid } from "nanoid";
 import { CreateOrganizationDTO } from "src/organizations/dtos/create-organization.dto";
 import { OTPService } from "src/services/otp.service";
 import { PrismaService } from "src/services/prisma.service";
@@ -24,6 +23,9 @@ import { JobNames, QueueNames } from "../utils/constants";
 import { RequestOTP, VerifyOTP } from "./dto/otp.dto";
 import { Request } from "express";
 import { REQUEST } from "@nestjs/core";
+import { nanoid } from "nanoid";
+import * as bcrypt from "bcrypt";
+import { AdminLogin } from "./dto/auth.dto";
 
 const CACHE_EXPIRY = 60 * 1000 * 3600;
 const JWT_EXIPIRY = 3600 * 12;
@@ -73,67 +75,67 @@ export class AuthService {
     };
   }
 
-  async completeOnboarding(reference: string, otpData: VerifyOTP) {
-    const cachedUserData: CreateUserDTO = await this.cacheManger.get(reference);
-    const cachedOrganizationData: CreateOrganizationDTO =
-      await this.cacheManger.get(generateOrganizationCacheKey(reference));
+  // async completeOnboarding(reference: string, otpData: VerifyOTP) {
+  //   const cachedUserData: CreateUserDTO = await this.cacheManger.get(reference);
+  //   const cachedOrganizationData: CreateOrganizationDTO =
+  //     await this.cacheManger.get(generateOrganizationCacheKey(reference));
 
-    if (!cachedOrganizationData || !cachedUserData) {
-      throw new BadRequestException("Please onboard again");
-    }
-    const { isVerified } = await this.otpService.verifyOtp(
-      cachedUserData.phoneNumber,
-      otpData.code,
-    );
-    if (!isVerified) {
-      throw new UnauthorizedException("Please confirm OTP code");
-    }
+  //   if (!cachedOrganizationData || !cachedUserData) {
+  //     throw new BadRequestException("Please onboard again");
+  //   }
+  //   const { isVerified } = await this.otpService.verifyOtp(
+  //     cachedUserData.phoneNumber,
+  //     otpData.code,
+  //   );
+  //   if (!isVerified) {
+  //     throw new UnauthorizedException("Please confirm OTP code");
+  //   }
 
-    await this.prismaService.$transaction(async (tx) => {
-      // first create the organization
-      const createdOrganization = await tx.organization.create({
-        data: {
-          ...cachedOrganizationData,
-          branches: {
-            create: {
-              ghanaPostGPS: cachedOrganizationData.ghanaPostGPS,
-              type: "HEAD_OFFICE",
-              phoneNumber: cachedOrganizationData.phoneNumber,
-            },
-          },
-        },
-        include: {
-          branches: true,
-        },
-      });
+  //   await this.prismaService.$transaction(async (tx) => {
+  //     // first create the organization
+  //     const createdOrganization = await tx.organization.create({
+  //       data: {
+  //         ...cachedOrganizationData,
+  //         branches: {
+  //           create: {
+  //             ghanaPostGPS: cachedOrganizationData.ghanaPostGPS,
+  //             type: "HEAD_OFFICE",
+  //             phoneNumber: cachedOrganizationData.phoneNumber,
+  //           },
+  //         },
+  //       },
+  //       include: {
+  //         branches: true,
+  //       },
+  //     });
 
-      const createdUser = tx.user.create({
-        data: {
-          ...cachedUserData,
-          branches: {
-            connect: { id: createdOrganization?.branches[0]?.id },
-          },
-          roles: {
-            connect: cachedUserData?.roles?.map((role) => ({
-              id: role?.id,
-            })),
-          },
-          organizations: {
-            connect: { id: createdOrganization.id },
-          },
-        },
-      });
+  //     const createdUser = tx.user.create({
+  //       data: {
+  //         ...cachedUserData,
+  //         // branches: {
+  //         //   connect: { id: createdOrganization?.branches[0]?.id },
+  //         // },
+  //         // roles: {
+  //         //   connect: cachedUserData?.roles?.map((role) => ({
+  //         //     id: role?.id,
+  //         //   })),
+  //         // },
+  //         // organizations: {
+  //         //   connect: { id: createdOrganization.id },
+  //         // },
+  //       },
+  //     });
 
-      return createdUser;
-    });
+  //     return createdUser;
+  //   });
 
-    await this.cacheManger.del(reference);
-    await this.cacheManger.del(generateOrganizationCacheKey(reference));
+  //   await this.cacheManger.del(reference);
+  //   await this.cacheManger.del(generateOrganizationCacheKey(reference));
 
-    return {
-      message: "Onboarding was successfully",
-    };
-  }
+  //   return {
+  //     message: "Onboarding was successfully",
+  //   };
+  // }
 
   async login(data: VerifyOTP) {
     const { isVerified } = await this.otpService.verifyOtp(
@@ -145,11 +147,11 @@ export class AuthService {
     }
 
     const userDetails = await this.getUserDetails(data.phoneNumber);
-    const tokenDetails = await this.createToken(userDetails);
+    // const tokenDetails = await this.createToken(userDetails);
 
     return {
       user: userDetails,
-      ...tokenDetails,
+      // ...tokenDetails,
     };
   }
 
@@ -160,7 +162,7 @@ export class AuthService {
     return await this.getUserDetails(phoneNumber);
   }
 
-  private async createToken(user: User) {
+  private async createToken(user: any) {
     const date = new Date();
     const token = await this.jwtService.sign(user, {
       expiresIn: JWT_EXIPIRY,
@@ -179,6 +181,25 @@ export class AuthService {
     };
   }
 
+  async loginAsAdmin(data: AdminLogin) {
+    const { hash, ...rest } = await this.getUserByEmail(data.email);
+
+    // const isMatch = await bcrypt.compare(data.password, hash);
+    console.log({ hash, pass: data.password });
+    const isMatch = hash === data.password;
+    if (!isMatch) {
+      throw new UnprocessableEntityException("Couldn't verify credentials");
+    }
+    const tokenDetails = await this.createToken(rest);
+
+    return {
+      user: rest,
+
+      ...tokenDetails,
+      // businessProfile,
+    };
+  }
+
   private async getUserDetails(phoneNumber: string) {
     const user = await this.prismaService.user.findFirst({
       where: {
@@ -186,44 +207,42 @@ export class AuthService {
         phoneNumber: phoneNumber,
       },
       include: {
-        roles: {
-          select: {
-            name: true,
-          },
-        },
-        organizations: {
-          where: {
-            users: {
-              some: {
-                phoneNumber: phoneNumber,
-              },
-            },
-          },
-          include: {
-            branches: {
-              where: {
-                users: {
-                  some: { phoneNumber: phoneNumber },
-                },
-              },
-              // include: {
-
-              //   ghanaPostGPS: true,
-              //   id: true,
-              //   phoneNumber: true,
-              //   type: true,
-              // },
-            },
-          },
-          // select: {
-          //   id: true,
-          //   name: true,
-          //   phoneNumber: true,
-          // },
-        },
+        // roles: {
+        //   select: {
+        //     name: true,
+        //   },
+        // },
+        // organizations: {
+        //   where: {
+        //     users: {
+        //       some: {
+        //         phoneNumber: phoneNumber,
+        //       },
+        //     },
+        //   },
+        //   include: {
+        //     branches: {
+        //       where: {
+        //         users: {
+        //           some: { phoneNumber: phoneNumber },
+        //         },
+        //       },
+        //     },
+        //   },
+        // },
       },
     });
     if (!user) throw new BadRequestException("Failed to fetch user details");
+    return user;
+  }
+
+  private async getUserByEmail(email: string) {
+    const user = await this.prismaService.admin.findFirst({
+      where: { email },
+    });
+    if (!user) {
+      throw new UnprocessableEntityException("Failed to verify user");
+    }
     return user;
   }
 }

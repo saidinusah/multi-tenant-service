@@ -1,19 +1,19 @@
 import { IsNotEmpty, IsString } from "class-validator";
 
-export class SignUp {
+export class StoreMember {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  foreNames: string;
 
-  @IsNotEmpty()
   @IsString()
-  ghanaPostGPS: string;
+  @IsNotEmpty()
+  lastName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  idNumber: string;
 
   @IsString()
   @IsNotEmpty()
   phoneNumber: string;
-
-  @IsString()
-  @IsNotEmpty()
-  email: string;
 }

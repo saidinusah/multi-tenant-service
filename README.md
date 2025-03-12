@@ -19,7 +19,7 @@ There's also organization/branch management to make your life easier in handling
   - [ ] Role Guard
   - [ ] Permission Guard
 - [ ] Subscription or payments??
-- [ ] Exception Filter
+- [x] Exception Filter
 - [x] AuthenticationGuard
 - [ ] Logging
 - [x] Complete onboarding 

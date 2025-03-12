@@ -9,45 +9,48 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
-model Organization {
-  id           Int      @id @default(autoincrement())
-  name         String
-  ghanaPostGPS String   @unique @map("ghana_post_gps")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @default(now()) @map("updated_at")
-  phoneNumber  String   @unique @map("phone_number")
-  email        String   @unique
-  users        User[]
-  branches     Branch[]
+// model Organization {
+//   id           Int      @id @default(autoincrement())
+//   name         String
+//   ghanaPostGPS String   @unique @map("ghana_post_gps")
+//   createdAt    DateTime @default(now()) @map("created_at")
+//   updatedAt    DateTime @default(now()) @map("updated_at")
+//   phoneNumber  String   @unique @map("phone_number")
+//   email        String   @unique
+//   users        User[]
+//   branches     Branch[]
 
-  @@map("organizations")
-}
+//   @@map("organizations")
+// }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  firstName     String         @map("first_name")
-  lastName      String         @map("last_name")
-  title         String?
-  email         String         @unique
-  phoneNumber   String         @map("phone_number")
-  roles         Role[]
-  organizations Organization[]
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  firstName   String  @map("first_name")
+  lastName    String  @map("last_name")
+  title       String?
+  email       String  @unique
+  phoneNumber String  @map("phone_number")
+  hash        String
+  // roles         Role[]
+  // organizations Organization[]
   // permissions   Permissions[]
-  branches      Branch[]
+  // branches      Branch[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt
+  Role      Role?    @relation(fields: [roleId], references: [id])
+  roleId    String?
 
   @@map("users")
 }
 
 model Role {
-  id   Int   @id @default(autoincrement())
-  name Roles @unique()
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name Roles  @unique()
 
   users User[]
 
@@ -64,13 +67,13 @@ enum BranchType {
 }
 
 model Branch {
-  id              Int          @id @default(autoincrement())
-  type            BranchType
-  ghanaPostGPS    String       @unique
-  organization_id Int
-  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  phoneNumber     String?
-  users           User[]
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  type         BranchType
+  ghanaPostGPS String     @unique
+  // organization_id String
+  // organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  phoneNumber  String?
+  // users           User[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at")
@@ -92,4 +95,37 @@ enum Roles {
   BACKOFFICE_ADMIN
   MEMBER
   TRAINER
+}
+
+model SubscriptionPackages {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  amount    Float
+  createdBy String
+  Member    Member[]
+}
+
+model Member {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  foreNames   String
+  lastName    String
+  phoneNumber String @unique
+  idNumber    String @unique
+  createdBy   String
+
+  subscriptions          SubscriptionPackages @relation(fields: [subscriptionPackagesId], references: [id])
+  subscriptionPackagesId String               @db.ObjectId
+
+  @@map("members")
+}
+
+model Admin {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  email       String @unique
+  phoneNumber String @unique
+  hash        String
+  foreNames   String
+  lastName    String
+
+  @@map("admins")
 }
