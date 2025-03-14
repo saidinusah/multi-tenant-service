@@ -6,10 +6,11 @@ import { NotificationProcessor } from "./jobs/notification.job";
 import { RoleModule } from "./roles/roles.module";
 import { UserModule } from "./users/user.module";
 import { validate } from "./utils/env.validation";
-import { APP_FILTER } from "@nestjs/core";
+import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { AppExceptionFilter } from "./filters/base.filter";
 import { MembersModule } from "./members/member.module";
 import { SubscriptionModule } from "./subscriptions/subscriptions.module";
+import { AuthGuard } from "./auth/guards/auth.guard";
 
 @Module({
   imports: [

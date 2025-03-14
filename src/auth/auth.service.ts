@@ -65,14 +65,14 @@ export class AuthService {
         phoneNumber: data.name,
         users: {
           connect: {
-            id: userId,
+            userId: userId,
           },
         },
       },
     });
     return {
       message: "Organization added successfully",
-      id: createdOrganization.id,
+      id: createdOrganization.organizationId,
     };
   }
 
@@ -107,7 +107,9 @@ export class AuthService {
     if (!isMatch) {
       throw new UnprocessableEntityException("Couldn't verify credentials");
     }
-    const tokenDetails = await this.createToken(rest);
+    const tokenDetails = await this.createToken({
+      id: rest.userId,
+    });
 
     return {
       user: rest,
@@ -127,9 +129,9 @@ export class AuthService {
         phoneNumber: data.phoneNumber,
       },
     });
-    const { id, hash, ...rest } = user;
+    const { id, hash, userId, ...rest } = user;
     const tokenDetails = await this.createToken({
-      id,
+      id: userId,
     });
     return {
       ...tokenDetails,
@@ -140,7 +142,7 @@ export class AuthService {
   private async getUserDetails(userId: string) {
     const user = await this.prismaService.user.findFirst({
       where: {
-        id: userId,
+        userId: userId,
       },
     });
     const { id, hash, ...rest } = user;
@@ -149,9 +151,11 @@ export class AuthService {
   }
 
   private async getUserByEmail(email: string) {
+    console.log("email", email);
     const user = await this.prismaService.user.findFirst({
       where: { email },
     });
+
     if (!user) {
       throw new UnprocessableEntityException("Failed to verify user");
     }

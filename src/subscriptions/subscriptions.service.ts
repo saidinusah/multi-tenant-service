@@ -21,7 +21,7 @@ export class SubscriptionService {
   async updateSubscription(data: StoreSubscription, id: string) {
     const createdSubscription =
       await this.prismaService.subscriptionPackages.update({
-        where: { id },
+        where: { subscriptionId: id },
         data: {
           ...data,
         },
@@ -40,7 +40,7 @@ export class SubscriptionService {
   async deleteSubscriptionPackage(id: string) {
     const subscriptionPackage = await this.findPackage(id);
     await this.prismaService.subscriptionPackages.update({
-      where: { id },
+      where: { subscriptionId: id },
       data: { isActive: false },
     });
     return {
@@ -51,7 +51,7 @@ export class SubscriptionService {
 
   async findPackage(id: string) {
     return await this.prismaService.subscriptionPackages.findFirstOrThrow({
-      where: { id },
+      where: { subscriptionId: id },
     });
   }
 }

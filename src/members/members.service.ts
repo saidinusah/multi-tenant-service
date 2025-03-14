@@ -1,47 +1,51 @@
 import { Inject, Injectable } from "@nestjs/common";
+import { REQUEST } from "@nestjs/core";
+import { Request } from "express";
 import { PrismaService } from "src/services/prisma.service";
 import { StoreMember } from "./dto/store-member.dto";
-import { Request } from "express";
-import { REQUEST } from "@nestjs/core";
 
 @Injectable()
 export class MembersService {
   constructor(
-    private prismaService: PrismaService,
+    private readonly prismaService: PrismaService,
     @Inject(REQUEST) private request: Request,
   ) {}
 
   async createMember(data: StoreMember) {
     const userId = this.request?.["userId"];
+    const organizationId = this.request?.["organizationId"];
     const createdMember = await this.prismaService.member.create({
       data: {
-        ...data,
-        createdBy: {
-          connect: { id: userId },
+        foreNames: data.foreNames,
+        lastName: data.lastName,
+        idNumber: data.idNumber,
+        phoneNumber: data.phoneNumber,
+        user: {
+          connect: { userId },
+        },
+        organization: {
+          connect: { organizationId },
         },
       },
     });
     return {
       message: "Member created",
-      id: createdMember.id,
+      id: createdMember.memberId,
     };
   }
 
   async updateMember(data: StoreMember, id: string) {
     const createdMember = await this.prismaService.member.update({
       where: {
-        id,
+        memberId: id,
       },
       data: {
         ...data,
-        createdBy: {
-          connect: { id: "dkdk" },
-        },
       },
     });
     return {
       message: "Member created",
-      id: createdMember.id,
+      id: createdMember.memberId,
     };
   }
 
@@ -54,8 +58,11 @@ export class MembersService {
   }
 
   async getMember(id: string) {
+    const organizationId = this.request?.["organizationId"];
+    console.log("organization", organizationId);
+
     return await this.prismaService.member.findFirst({
-      where: { id },
+      where: { memberId: id, organizationId },
     });
   }
 }
