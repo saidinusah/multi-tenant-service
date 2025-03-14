@@ -13,50 +13,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// model Organization {
-//   id           Int      @id @default(autoincrement())
-//   name         String
-//   ghanaPostGPS String   @unique @map("ghana_post_gps")
-//   createdAt    DateTime @default(now()) @map("created_at")
-//   updatedAt    DateTime @default(now()) @map("updated_at")
-//   phoneNumber  String   @unique @map("phone_number")
-//   email        String   @unique
-//   users        User[]
-//   branches     Branch[]
+model Organization {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  ghanaPostGPS String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+  phoneNumber  String   @unique
+  email        String   @unique
+  users        User[]
+  branches     Branch[]
+  Member       Member[]
 
-//   @@map("organizations")
-// }
-
-model User {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
-  firstName   String  @map("first_name")
-  lastName    String  @map("last_name")
-  title       String?
-  email       String  @unique
-  phoneNumber String  @map("phone_number")
-  hash        String
-  // roles         Role[]
-  // organizations Organization[]
-  // permissions   Permissions[]
-  // branches      Branch[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt
-  Role      Role?    @relation(fields: [roleId], references: [id])
-  roleId    String?
-
-  @@map("users")
+  @@map("organizations")
 }
 
 model Role {
-  id   String @id @default(auto()) @map("_id") @db.ObjectId
-  name Roles  @unique()
-
-  users User[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
-  // Permissions Permissions[]
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      Roles     @unique()
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 
   @@map("roles")
 }
@@ -70,26 +46,16 @@ model Branch {
   id           String     @id @default(auto()) @map("_id") @db.ObjectId
   type         BranchType
   ghanaPostGPS String     @unique
-  // organization_id String
-  // organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
   phoneNumber  String?
-  // users           User[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime?     @updatedAt
+  Organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?       @db.ObjectId
 
   @@map("branches")
 }
 
-// model Permissions {
-//   id     Int    @id @default(autoincrement())
-//   name   String
-//   role   Role?  @relation(fields: [roleId], references: [id])
-//   roleId Int?   @map("role_id")
-//   user   User?  @relation(fields: [userId], references: [id])
-//   userId Int?   @map("user_id")
-
-// }
 enum Roles {
   SUPER_ADMIN
   BACKOFFICE_ADMIN
@@ -97,35 +63,60 @@ enum Roles {
   TRAINER
 }
 
+enum RenewalPeriods {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  BI_ANNUALLY
+  ANNUALLY
+}
+
 model SubscriptionPackages {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  amount    Float
-  createdBy String
-  Member    Member[]
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  amount        Float
+  createdBy     String
+  description   String?
+  // Member    Member[]
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @updatedAt
+  renewalPeriod String
+
+  @@map("subscription_packages")
 }
 
 model Member {
   id          String @id @default(auto()) @map("_id") @db.ObjectId
   foreNames   String
   lastName    String
-  phoneNumber String @unique
-  idNumber    String @unique
-  createdBy   String
+  phoneNumber String
+  idNumber    String
+  createdBy   String @db.ObjectId
 
-  subscriptions          SubscriptionPackages @relation(fields: [subscriptionPackagesId], references: [id])
-  subscriptionPackagesId String               @db.ObjectId
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime?    @updatedAt
+  user           User         @relation(fields: [createdBy], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String       @db.ObjectId
 
+  @@index([createdBy, organizationId])
   @@map("members")
 }
 
-model Admin {
+model User {
   id          String @id @default(auto()) @map("_id") @db.ObjectId
   email       String @unique
-  phoneNumber String @unique
+  phoneNumber String
   hash        String
   foreNames   String
   lastName    String
 
-  @@map("admins")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime?     @updatedAt
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  Member         Member[]
+
+  @@map("users")
 }

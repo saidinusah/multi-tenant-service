@@ -10,12 +10,10 @@ import {
 } from "@nestjs/common";
 
 import { JwtService } from "@nestjs/jwt";
-import { Admin, User } from "@prisma/client";
 import { Queue } from "bull";
 import { Cache } from "cache-manager";
 import { addSeconds } from "date-fns";
 import { CreateOrganizationDTO } from "src/organizations/dtos/create-organization.dto";
-import { OTPService } from "src/services/otp.service";
 import { PrismaService } from "src/services/prisma.service";
 import { CreateUserDTO } from "src/users/dtos/create-user.dto";
 import { generateOrganizationCacheKey } from "src/utils/helpers";
@@ -25,7 +23,7 @@ import { Request } from "express";
 import { REQUEST } from "@nestjs/core";
 import { nanoid } from "nanoid";
 import * as bcrypt from "bcrypt";
-import { AdminLogin } from "./dto/auth.dto";
+import { Login, SignUpAsAdmin } from "./dto/auth.dto";
 
 const CACHE_EXPIRY = 60 * 1000 * 3600;
 const JWT_EXIPIRY = 3600 * 12;
@@ -35,7 +33,6 @@ export class AuthService {
   constructor(
     @Inject(CACHE_MANAGER) private cacheManger: Cache,
     private prismaService: PrismaService,
-    private otpService: OTPService,
     private jwtService: JwtService,
     @InjectQueue(QueueNames.NOTIFICATION)
     private readonly notificationQueue: Queue,
@@ -53,118 +50,40 @@ export class AuthService {
     };
   }
 
-  async createOrganization(data: CreateOrganizationDTO, reference: string) {
-    const userData: CreateUserDTO = await this.cacheManger.get(reference);
-
-    if (!userData) {
-      throw new UnprocessableEntityException(
-        "Please verify onboarding reference",
-      );
+  async createOrganization(data: CreateOrganizationDTO) {
+    const userId = this.request?.["userId"];
+    const userDetails = await this.getUserDetails(userId);
+    if (userDetails.organizationId) {
+      throw new BadRequestException("User has completed onboarding");
     }
-    await this.cacheManger.set(
-      generateOrganizationCacheKey(reference),
-      data,
-      CACHE_EXPIRY,
-    );
-    await this.notificationQueue.add(JobNames.NOTIFICATION.SEND_OTP, {
-      phoneNumber: userData.phoneNumber,
+
+    const createdOrganization = await this.prismaService.organization.create({
+      data: {
+        email: data.email,
+        ghanaPostGPS: data.ghanaPostGPS,
+        name: data.name,
+        phoneNumber: data.name,
+        users: {
+          connect: {
+            id: userId,
+          },
+        },
+      },
     });
     return {
-      message:
-        "OTP has been successfully sent, please check your messaging app",
-    };
-  }
-
-  // async completeOnboarding(reference: string, otpData: VerifyOTP) {
-  //   const cachedUserData: CreateUserDTO = await this.cacheManger.get(reference);
-  //   const cachedOrganizationData: CreateOrganizationDTO =
-  //     await this.cacheManger.get(generateOrganizationCacheKey(reference));
-
-  //   if (!cachedOrganizationData || !cachedUserData) {
-  //     throw new BadRequestException("Please onboard again");
-  //   }
-  //   const { isVerified } = await this.otpService.verifyOtp(
-  //     cachedUserData.phoneNumber,
-  //     otpData.code,
-  //   );
-  //   if (!isVerified) {
-  //     throw new UnauthorizedException("Please confirm OTP code");
-  //   }
-
-  //   await this.prismaService.$transaction(async (tx) => {
-  //     // first create the organization
-  //     const createdOrganization = await tx.organization.create({
-  //       data: {
-  //         ...cachedOrganizationData,
-  //         branches: {
-  //           create: {
-  //             ghanaPostGPS: cachedOrganizationData.ghanaPostGPS,
-  //             type: "HEAD_OFFICE",
-  //             phoneNumber: cachedOrganizationData.phoneNumber,
-  //           },
-  //         },
-  //       },
-  //       include: {
-  //         branches: true,
-  //       },
-  //     });
-
-  //     const createdUser = tx.user.create({
-  //       data: {
-  //         ...cachedUserData,
-  //         // branches: {
-  //         //   connect: { id: createdOrganization?.branches[0]?.id },
-  //         // },
-  //         // roles: {
-  //         //   connect: cachedUserData?.roles?.map((role) => ({
-  //         //     id: role?.id,
-  //         //   })),
-  //         // },
-  //         // organizations: {
-  //         //   connect: { id: createdOrganization.id },
-  //         // },
-  //       },
-  //     });
-
-  //     return createdUser;
-  //   });
-
-  //   await this.cacheManger.del(reference);
-  //   await this.cacheManger.del(generateOrganizationCacheKey(reference));
-
-  //   return {
-  //     message: "Onboarding was successfully",
-  //   };
-  // }
-
-  async login(data: VerifyOTP) {
-    const { isVerified } = await this.otpService.verifyOtp(
-      data.phoneNumber,
-      data.code,
-    );
-    if (!isVerified) {
-      throw new UnauthorizedException("Please confirm OTP code");
-    }
-
-    const userDetails = await this.getUserDetails(data.phoneNumber);
-    // const tokenDetails = await this.createToken(userDetails);
-
-    return {
-      user: userDetails,
-      // ...tokenDetails,
+      message: "Organization added successfully",
+      id: createdOrganization.id,
     };
   }
 
   async getLoggedInUserDetails() {
-    const user = this.request?.["user"];
-    const userId = user?.id as number;
-    const phoneNumber = user?.phoneNumber as string;
-    return await this.getUserDetails(phoneNumber);
+    const userId = this.request?.["userId"];
+    return await this.getUserDetails(userId);
   }
 
-  private async createToken(user: any) {
+  private async createToken(userDetails: { id: string }) {
     const date = new Date();
-    const token = await this.jwtService.sign(user, {
+    const token = await this.jwtService.sign(userDetails, {
       expiresIn: JWT_EXIPIRY,
       privateKey: this.jwtEncryptionKey,
     });
@@ -181,12 +100,10 @@ export class AuthService {
     };
   }
 
-  async loginAsAdmin(data: AdminLogin) {
+  async loginAsAdmin(data: Login) {
     const { hash, ...rest } = await this.getUserByEmail(data.email);
 
-    // const isMatch = await bcrypt.compare(data.password, hash);
-    console.log({ hash, pass: data.password });
-    const isMatch = hash === data.password;
+    const isMatch = await bcrypt.compare(data.password, hash);
     if (!isMatch) {
       throw new UnprocessableEntityException("Couldn't verify credentials");
     }
@@ -194,50 +111,45 @@ export class AuthService {
 
     return {
       user: rest,
-
       ...tokenDetails,
-      // businessProfile,
     };
   }
 
-  private async getUserDetails(phoneNumber: string) {
-    const user = await this.prismaService.user.findFirst({
-      where: {
-        // id: userId,
-        phoneNumber: phoneNumber,
-      },
-      include: {
-        // roles: {
-        //   select: {
-        //     name: true,
-        //   },
-        // },
-        // organizations: {
-        //   where: {
-        //     users: {
-        //       some: {
-        //         phoneNumber: phoneNumber,
-        //       },
-        //     },
-        //   },
-        //   include: {
-        //     branches: {
-        //       where: {
-        //         users: {
-        //           some: { phoneNumber: phoneNumber },
-        //         },
-        //       },
-        //     },
-        //   },
-        // },
+  async signUpAsAdmin(data: SignUpAsAdmin) {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    const user = await this.prismaService.user.create({
+      data: {
+        email: data.email,
+        hash: hashedPassword,
+        foreNames: data.foreNames,
+        lastName: data.lastName,
+        phoneNumber: data.phoneNumber,
       },
     });
+    const { id, hash, ...rest } = user;
+    const tokenDetails = await this.createToken({
+      id,
+    });
+    return {
+      ...tokenDetails,
+      user: rest,
+    };
+  }
+
+  private async getUserDetails(userId: string) {
+    const user = await this.prismaService.user.findFirst({
+      where: {
+        id: userId,
+      },
+    });
+    const { id, hash, ...rest } = user;
     if (!user) throw new BadRequestException("Failed to fetch user details");
-    return user;
+    return rest;
   }
 
   private async getUserByEmail(email: string) {
-    const user = await this.prismaService.admin.findFirst({
+    const user = await this.prismaService.user.findFirst({
       where: { email },
     });
     if (!user) {

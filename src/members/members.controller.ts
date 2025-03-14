@@ -5,7 +5,7 @@ import {
   Param,
   Patch,
   Post,
-  Query,
+  UseGuards,
 } from "@nestjs/common";
 import { StoreMember } from "./dto/store-member.dto";
 import { MembersService } from "./members.service";
@@ -25,14 +25,14 @@ export class MembersController {
   }
 
   @Patch(":id")
-  async updateMember(@Body() data: StoreMember, @Param("id") id: number) {
+  async updateMember(@Body() data: StoreMember, @Param("id") id: string) {
     return {
       message: "Member updated successfully",
     };
   }
 
   @Get(":id")
-  async retrieveMember(@Param("id") id: number) {
+  async retrieveMember(@Param("id") id: string) {
     return await this.memberservice.getMember(id);
   }
 }

@@ -11,18 +11,14 @@ export class SubscriptionService {
       await this.prismaService.subscriptionPackages.create({
         data: {
           ...data,
-          createdBy: {
-            connect: {
-              id: 1,
-            },
-          },
+          createdBy: "saidinusah29@gmail.com",
         },
       });
 
     return { message: "Created subscription", id: createdSubscription.id };
   }
 
-  async updateSubscription(data: StoreSubscription, id: number) {
+  async updateSubscription(data: StoreSubscription, id: string) {
     const createdSubscription =
       await this.prismaService.subscriptionPackages.update({
         where: { id },
@@ -38,6 +34,24 @@ export class SubscriptionService {
     return await this.prismaService.subscriptionPackages.findMany({
       take: 20,
       skip: 0,
+    });
+  }
+
+  async deleteSubscriptionPackage(id: string) {
+    const subscriptionPackage = await this.findPackage(id);
+    await this.prismaService.subscriptionPackages.update({
+      where: { id },
+      data: { isActive: false },
+    });
+    return {
+      message: "Subscription package updated",
+      id: subscriptionPackage.id,
+    };
+  }
+
+  async findPackage(id: string) {
+    return await this.prismaService.subscriptionPackages.findFirstOrThrow({
+      where: { id },
     });
   }
 }

@@ -26,14 +26,14 @@ export class RolesController {
   }
 
   @Put(":id")
-  async updateRole(@Body() reqData: CreateRoleDTO, @Param("id") id: number) {
+  async updateRole(@Body() reqData: CreateRoleDTO, @Param("id") id: string) {
     await this.rolesService.updateRole(reqData, id);
 
     return { message: "Updated role successfully" };
   }
 
   @Delete(":id")
-  async deleteRole(@Param("id") id: number) {
+  async deleteRole(@Param("id") id: string) {
     await this.rolesService.deleteRole(id);
     return { message: "Deleted role successfully" };
   }

@@ -1,19 +1,23 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/services/prisma.service";
 import { StoreMember } from "./dto/store-member.dto";
+import { Request } from "express";
+import { REQUEST } from "@nestjs/core";
 
 @Injectable()
 export class MembersService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    @Inject(REQUEST) private request: Request,
+  ) {}
 
   async createMember(data: StoreMember) {
+    const userId = this.request?.["userId"];
     const createdMember = await this.prismaService.member.create({
       data: {
         ...data,
         createdBy: {
-          connect: {
-            id: 1,
-          },
+          connect: { id: userId },
         },
       },
     });
@@ -23,7 +27,7 @@ export class MembersService {
     };
   }
 
-  async updateMember(data: StoreMember, id: number) {
+  async updateMember(data: StoreMember, id: string) {
     const createdMember = await this.prismaService.member.update({
       where: {
         id,
@@ -31,9 +35,7 @@ export class MembersService {
       data: {
         ...data,
         createdBy: {
-          connect: {
-            id: 1,
-          },
+          connect: { id: "dkdk" },
         },
       },
     });
@@ -51,9 +53,9 @@ export class MembersService {
     });
   }
 
-  async getMember(id: number) {
+  async getMember(id: string) {
     return await this.prismaService.member.findFirst({
-      where: { id: Number(id) },
+      where: { id },
     });
   }
 }

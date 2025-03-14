@@ -14,7 +14,7 @@ import { AuthService } from "./auth.service";
 import { RequestOTP, VerifyOTP } from "./dto/otp.dto";
 import { HasProfileGuard } from "./guards/has-profile.guard";
 import { AuthGuard } from "./guards/auth.guard";
-import { AdminLogin } from "./dto/auth.dto";
+import { Login, SignUpAsAdmin } from "./dto/auth.dto";
 
 @Controller("auth")
 export class AuthController {
@@ -24,18 +24,6 @@ export class AuthController {
   @Post("/signup/user")
   async signUpAsUser(@Body() userData: CreateUserDTO) {
     return await this.authService.createUser(userData);
-  }
-
-  // add organization details
-  @Patch("/signup/:reference/organization")
-  async signUpAsOrganization(
-    @Body() organizationData: CreateOrganizationDTO,
-    @Param("reference") reference: string,
-  ) {
-    return await this.authService.createOrganization(
-      organizationData,
-      reference,
-    );
   }
 
   // verify contact and confirm onboarding
@@ -58,20 +46,25 @@ export class AuthController {
     return await this.authService.requestOtp(data);
   }
 
-  @Post("/login")
-  @UseGuards(HasProfileGuard)
-  async login(@Body() data: VerifyOTP) {
-    return await this.authService.login(data);
-  }
-
   @Get("/me")
   @UseGuards(AuthGuard)
   async getLoggedInUserDetails() {
     return await this.authService.getLoggedInUserDetails();
   }
 
-  @Post("/admin/login")
-  async authenticatedAdmin(@Body() data: AdminLogin) {
+  @Post("/login")
+  async authenticateAdmin(@Body() data: Login) {
     return await this.authService.loginAsAdmin(data);
+  }
+
+  @Post("/signup")
+  async signUpAsAdmin(@Body() data: SignUpAsAdmin) {
+    return await this.authService.signUpAsAdmin(data);
+  }
+
+  @Post("/add-organization")
+  @UseGuards(AuthGuard)
+  async addOrganization(@Body() data: CreateOrganizationDTO) {
+    return await this.authService.createOrganization(data);
   }
 }
