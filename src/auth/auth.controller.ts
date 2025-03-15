@@ -53,11 +53,13 @@ export class AuthController {
   }
 
   @Post("/login")
+  @HttpCode(200)
   async authenticateAdmin(@Body() data: Login) {
     return await this.authService.loginAsAdmin(data);
   }
 
   @Post("/signup")
+  @HttpCode(200)
   async signUpAsAdmin(@Body() data: SignUpAsAdmin) {
     return await this.authService.signUpAsAdmin(data);
   }

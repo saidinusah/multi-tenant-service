@@ -18,7 +18,6 @@ export class MembersController {
 
   @Get(":id")
   async retrieveMember(@Param("id") id: string) {
-    console.log({ id });
     return await this.membersService.getMember(id);
   }
 
@@ -32,10 +31,8 @@ export class MembersController {
     return await this.membersService.createMember(data);
   }
 
-  @Patch("id")
+  @Patch(":id")
   async updateMember(@Body() data: StoreMember, @Param("id") id: string) {
-    return {
-      message: "Member updated successfully",
-    };
+    return await this.membersService.updateMember(data, id);
   }
 }

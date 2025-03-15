@@ -35,25 +35,33 @@ export class MembersService {
   }
 
   async updateMember(data: StoreMember, id: string) {
-    const createdMember = await this.prismaService.member.update({
+    const organizationId = this.request?.["organizationId"];
+    const userId = this.request?.["userId"];
+    await this.retrieveMember(id, organizationId);
+    const updatedMember = await this.prismaService.member.update({
       where: {
         memberId: id,
       },
       data: {
         ...data,
+        updatedBy: userId,
       },
     });
     return {
       message: "Member created",
-      id: createdMember.memberId,
+      id: updatedMember.memberId,
     };
   }
 
   async getAllMembers(page = 1, limit = 10) {
+    const organizationId = this.request?.["organizationId"];
     const offset = (page - 1) * limit;
     return await this.prismaService.member.findMany({
       take: limit,
       skip: offset,
+      where: {
+        organizationId: organizationId,
+      },
     });
   }
 
@@ -62,6 +70,12 @@ export class MembersService {
     console.log("organization", organizationId);
 
     return await this.prismaService.member.findFirst({
+      where: { memberId: id, organizationId },
+    });
+  }
+
+  private async retrieveMember(id: string, organizationId: string) {
+    return await this.prismaService.member.findFirstOrThrow({
       where: { memberId: id, organizationId },
     });
   }
