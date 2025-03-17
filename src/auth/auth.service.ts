@@ -151,7 +151,6 @@ export class AuthService {
   }
 
   private async getUserByEmail(email: string) {
-    console.log("email", email);
     const user = await this.prismaService.user.findFirst({
       where: { email },
     });

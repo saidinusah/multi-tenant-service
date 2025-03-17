@@ -23,7 +23,6 @@ export class AppExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.BAD_REQUEST;
 
-    console.log(ctx.getResponse());
     const responseBody = {
       status:
         httpStatus === HttpStatus.INTERNAL_SERVER_ERROR
