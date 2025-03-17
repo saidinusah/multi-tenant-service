@@ -7,9 +7,9 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
+import { AuthGuard } from "src/auth/guards/auth.guard";
 import { StoreMember } from "./dto/store-member.dto";
 import { MembersService } from "./members.service";
-import { AuthGuard } from "src/auth/guards/auth.guard";
 
 @Controller("members")
 @UseGuards(AuthGuard)

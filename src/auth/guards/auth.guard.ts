@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   CanActivate,
   ExecutionContext,
   Injectable,
@@ -26,11 +27,15 @@ export class AuthGuard implements CanActivate {
         secret: process.env.JWT_SECRET,
       });
       const payloadUserId = payload?.id;
-      const userDetails = await this.prismaService.user.findFirstOrThrow({
-        where: {
-          userId: payloadUserId,
-        },
-      });
+      const userDetails = await this.prismaService.user
+        .findFirstOrThrow({
+          where: {
+            userId: payloadUserId,
+          },
+        })
+        .catch(() => {
+          throw new BadRequestException("Could not verify profile");
+        });
 
       request["userId"] = payload?.id;
       request["organizationId"] = userDetails?.organizationId;
