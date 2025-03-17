@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { PrismaService } from "src/services/prisma.service";
@@ -67,16 +67,16 @@ export class MembersService {
 
   async getMember(id: string) {
     const organizationId = this.request?.["organizationId"];
-    console.log("organization", organizationId);
-
-    return await this.prismaService.member.findFirst({
-      where: { memberId: id, organizationId },
-    });
+    return await this.retrieveMember(id, organizationId);
   }
 
   private async retrieveMember(id: string, organizationId: string) {
-    return await this.prismaService.member.findFirstOrThrow({
-      where: { memberId: id, organizationId },
-    });
+    return await this.prismaService.member
+      .findFirstOrThrow({
+        where: { memberId: id, organizationId },
+      })
+      .catch(() => {
+        throw new NotFoundException("Resource not found");
+      });
   }
 }
