@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
 
 export class StoreMember {
   @IsString()
@@ -16,4 +16,8 @@ export class StoreMember {
   @IsString()
   @IsNotEmpty()
   phoneNumber: string;
+
+  @IsOptional()
+  @IsUUID()
+  packageId?: string;
 }

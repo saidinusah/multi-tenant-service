@@ -1,5 +1,12 @@
-import { IsEmail, IsNotEmpty, IsPhoneNumber, IsString } from "class-validator";
+import {
+  Equals,
+  IsEmail,
+  IsNotEmpty,
+  IsPhoneNumber,
+  IsString,
+} from "class-validator";
 import * as bcrypt from "bcrypt";
+import { IsStringsEqual } from "./custom.validation.dto";
 
 export class SignUp {
   @IsString()
@@ -38,6 +45,7 @@ export class SignUpAsAdmin {
   password: string;
 
   @IsNotEmpty()
+  @IsStringsEqual("password", { message: "Passwords do not match" })
   confirmPassword: string;
 
   @IsNotEmpty()

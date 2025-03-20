@@ -3,30 +3,47 @@ import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { PrismaService } from "src/services/prisma.service";
 import { StoreMember } from "./dto/store-member.dto";
+import { Prisma } from "@prisma/client";
+import { PackagesService } from "src/subscriptions/packages.service";
 
 @Injectable()
 export class MembersService {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(REQUEST) private request: Request,
+    private packagesService: PackagesService,
   ) {}
 
   async createMember(data: StoreMember) {
     const userId = this.request?.["userId"];
     const organizationId = this.request?.["organizationId"];
-    const createdMember = await this.prismaService.member.create({
-      data: {
-        foreNames: data.foreNames,
-        lastName: data.lastName,
-        idNumber: data.idNumber,
-        phoneNumber: data.phoneNumber,
-        user: {
-          connect: { userId },
-        },
-        organization: {
-          connect: { organizationId },
-        },
+
+    if (data.packageId) {
+      await this.packagesService.findPackage(data.packageId);
+    }
+    let payload: Prisma.MemberCreateInput = {
+      foreNames: data.foreNames,
+      lastName: data.lastName,
+      idNumber: data.idNumber,
+      phoneNumber: data.phoneNumber,
+      createdBy: userId,
+      organization: {
+        connect: { organizationId },
       },
+    };
+    if (data.packageId) {
+      payload = {
+        ...payload,
+        subscriptions: {
+          connect: {
+            subscriptionId: data.packageId,
+          },
+        },
+      };
+    }
+
+    const createdMember = await this.prismaService.member.create({
+      data: payload,
     });
     return {
       message: "Member created",
