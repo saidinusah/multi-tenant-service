@@ -19,6 +19,9 @@ export class AppValidationPipe implements PipeTransform {
     errors: [],
   };
   async transform(value: any, { metatype }: ArgumentMetadata) {
+    if (!metatype || !this.toValidate(metatype)) {
+      return value;
+    }
     const object = plainToInstance(metatype, value);
     const requestErrors = await validate(object);
     if (requestErrors?.length) {
@@ -51,5 +54,10 @@ export class AppValidationPipe implements PipeTransform {
         this.validationErrors.errors.push({ field, errors });
       }
     });
+  }
+
+  private toValidate(metatype: Function): boolean {
+    const types: Function[] = [String, Boolean, Number, Array, Object];
+    return !types.includes(metatype);
   }
 }

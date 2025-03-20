@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   CanActivate,
   ExecutionContext,
   Injectable,
@@ -6,10 +7,14 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
+import { PrismaService } from "src/services/prisma.service";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
+  constructor(
+    private jwtService: JwtService,
+    private prismaService: PrismaService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context?.switchToHttp().getRequest();
@@ -21,7 +26,19 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_SECRET,
       });
-      request["user"] = payload;
+      const payloadUserId = payload?.id;
+      const userDetails = await this.prismaService.user
+        .findFirstOrThrow({
+          where: {
+            userId: payloadUserId,
+          },
+        })
+        .catch(() => {
+          throw new BadRequestException("Could not verify profile");
+        });
+
+      request["userId"] = payload?.id;
+      request["organizationId"] = userDetails?.organizationId;
     } catch (error) {
       throw new UnauthorizedException();
     }

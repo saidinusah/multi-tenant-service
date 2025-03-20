@@ -1,14 +1,15 @@
 import { BullModule } from "@nestjs/bull";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { APP_FILTER } from "@nestjs/core";
 import { AuthModule } from "./auth/auth.module";
+import { AppExceptionFilter } from "./filters/base.filter";
 import { NotificationProcessor } from "./jobs/notification.job";
-import { OrganizationModule } from "./organizations/organization.module";
+import { MembersModule } from "./members/member.module";
 import { RoleModule } from "./roles/roles.module";
 import { UserModule } from "./users/user.module";
 import { validate } from "./utils/env.validation";
-import { APP_FILTER } from "@nestjs/core";
-import { AppExceptionFilter } from "./filters/base.filter";
+import { PackagesModule } from "./subscriptions/packages.module";
 
 @Module({
   imports: [
@@ -25,13 +26,14 @@ import { AppExceptionFilter } from "./filters/base.filter";
 
     UserModule,
     RoleModule,
-    OrganizationModule,
     AuthModule,
+    MembersModule,
+    PackagesModule,
   ],
   controllers: [],
   providers: [
     NotificationProcessor,
-    // { provide: APP_FILTER, useClass: AppExceptionFilter },
+    { provide: APP_FILTER, useClass: AppExceptionFilter },
   ],
 })
 export class AppModule {}
