@@ -9,54 +9,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
-}
-
-model Organization {
-  id               Int      @id @default(autoincrement())
-  name             String
-  ghanaPostGPS     String   @unique @map("ghana_post_gps")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @default(now()) @map("updated_at")
-  phoneNumber      String   @unique @map("phone_number")
-  email            String   @unique
-  users            User[]
-  branches         Branch[]
-  onboardReference String?  @map("onboard_reference")
-
-  @@map("organizations")
-}
-
-model User {
-  id            Int            @id @default(autoincrement())
-  firstName     String         @map("first_name")
-  lastName      String         @map("last_name")
-  title         String?
-  email         String         @unique
-  phoneNumber   String         @map("phone_number")
-  roles         Role[]
-  organizations Organization[]
-
-  branch_id Int?
-  branch    Branch? @relation(fields: [branch_id], references: [id])
-
-createdAt DateTime @map("created_at") @default(now())
-updatedAt DateTime @updatedAt
-
-  @@map("users")
-}
-
-model Role {
-  id   Int    @id @default(autoincrement())
-  name String @unique()
-
-  users User[]
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
-
-  @@map("roles")
 }
 
 enum BranchType {
@@ -64,14 +18,135 @@ enum BranchType {
   SUB
 }
 
+enum Roles {
+  SUPER_ADMIN
+  BACKOFFICE_ADMIN
+  MEMBER
+  TRAINER
+}
+
+enum RenewalPeriods {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  BI_ANNUALLY
+  ANNUALLY
+}
+
+model Organization {
+  id                   String                @id @default(auto()) @map("_id") @db.ObjectId
+  name                 String
+  ghanaPostGPS         String                @unique
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @default(now())
+  phoneNumber          String                @unique
+  email                String                @unique
+  organizationId       String                @unique @default(uuid())
+  users                User[]
+  branches             Branch[]
+  members              Member[]
+  subscriptionPackages SubscriptionPackage[]
+
+  @@map("organizations")
+}
+
+model Role {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      Roles     @unique()
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  roleId    String    @unique @default(uuid())
+
+  @@map("roles")
+}
+
 model Branch {
-  id              Int          @id @default(autoincrement())
-  type            BranchType
-  ghanaPostGPS    String       @unique
-  organization_id Int
-  organization    Organization @relation(fields: [organization_id], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  phoneNumber     String?
-  users           User[]
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  branchId String @unique @default(uuid())
+
+  type         BranchType
+  ghanaPostGPS String     @unique
+  phoneNumber  String?
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime?     @updatedAt
+  Organization   Organization? @relation(fields: [organizationId], references: [organizationId])
+  organizationId String?
 
   @@map("branches")
+}
+
+model User {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String @unique @default(uuid())
+  email       String @unique
+  phoneNumber String
+  hash        String
+  foreNames   String
+  lastName    String
+
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime?             @updatedAt
+  organization    Organization?         @relation(fields: [organizationId], references: [organizationId])
+  organizationId  String?
+  packagesCreated SubscriptionPackage[] @relation("createdPackages")
+  packagesUpdated SubscriptionPackage[] @relation("updatedPackages")
+
+  @@map("users")
+}
+
+model SubscriptionPackage {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  packageId String @unique @default(uuid())
+
+  name          String
+  amount        Float
+  createdByUser User   @relation("createdPackages", fields: [createdByUserId], references: [userId])
+  updatedByUser User?  @relation("updatedPackages", fields: [updatedByUserId], references: [userId])
+
+  description     String?
+  deactivedAt     DateTime?      
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime?      @updatedAt
+  renewalPeriod   String
+  organization    Organization   @relation(fields: [organizationId], references: [organizationId])
+  organizationId  String
+  subscriptions   Subscription[]
+  createdByUserId String
+  updatedByUserId String?
+
+  @@map("subscription_packages")
+}
+
+model Subscription {
+  id             String              @id @default(auto()) @map("_id") @db.ObjectId
+  subscriptionId String              @unique @default(uuid())
+  member         Member              @relation(fields: [memberId], references: [id])
+  memberId       String              @db.ObjectId
+  package        SubscriptionPackage @relation(fields: [packageId], references: [id])
+  packageId      String              @db.ObjectId
+
+  @@map("subscriptions")
+}
+
+model Member {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  memberId String @unique @default(uuid())
+
+  foreNames   String
+  lastName    String
+  phoneNumber String
+  idNumber    String
+  createdBy   String
+  updatedBy   String?
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime?      @updatedAt
+  organization   Organization   @relation(fields: [organizationId], references: [organizationId])
+  organizationId String
+  subscriptions  Subscription[]
+
+  @@unique([organizationId, phoneNumber, idNumber])
+  @@index([createdBy, organizationId, memberId, phoneNumber])
+  @@map("members")
 }

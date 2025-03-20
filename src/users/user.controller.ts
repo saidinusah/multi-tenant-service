@@ -1,5 +1,4 @@
-import { Body, Controller, Get, Injectable, Post } from "@nestjs/common";
-import { PrismaService } from "src/services/prisma.service";
+import { Body, Controller, Get, Patch, Post } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDTO } from "./dtos/create-user.dto";
 
@@ -12,9 +11,12 @@ export class UserController {
     return await this.userService.getUsers();
   }
 
-  @Post()
-  async createUser(@Body() data: CreateUserDTO) {
-    await this.userService.createNewUser(data);
-    return { message: "stored user successfully" };
-  }
+  // @Post()
+  // async createUser(@Body() data: CreateUserDTO) {
+  //   await this.userService.createNewUser(data);
+  //   return { message: "stored user successfully" };
+  // }
+
+  // @Patch(':id')
+  // async addOrganizationToUser(@Body() )
 }

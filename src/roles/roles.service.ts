@@ -16,14 +16,14 @@ export class RolesService {
     });
   }
 
-  async updateRole(data: CreateRoleDTO, id: number) {
+  async updateRole(data: CreateRoleDTO, id: string) {
     return await this.prismaService.role.update({
-      where: { id },
+      where: { roleId: id },
       data,
     });
   }
 
-  async deleteRole(id: number) {
-    return await this.prismaService.role.delete({ where: { id } });
+  async deleteRole(id: string) {
+    return await this.prismaService.role.delete({ where: { roleId: id } });
   }
 }

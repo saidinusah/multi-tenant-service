@@ -1,14 +1,14 @@
-import { IsPhoneNumber, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsPhoneNumber, IsString, MaxLength, MinLength } from "class-validator";
 
 export class RequestOTP {
   @IsString()
-  @IsPhoneNumber('GH')
+  @IsPhoneNumber("GH")
   phoneNumber: string;
 }
 
 export class VerifyOTP {
   @IsString()
-  @IsPhoneNumber('GH')
+  @IsPhoneNumber("GH")
   phoneNumber: string;
 
   @IsString()

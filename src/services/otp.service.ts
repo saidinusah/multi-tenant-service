@@ -8,7 +8,7 @@ import { SMS_TEMPLATE } from "src/utils/constants";
 export class OTPService {
   private PROVIDER_BASE_URL = process.env.ARKESEL_URL;
   private PROVIDER_API_KEY = process.env.ARKESEL_KEY;
-  private SENDER_ID = process.env.SENDER_ID;
+  private SENDER_ID = process.env.SMS_SENDER_ID;
   private SEND_OTP_PAYLOAD = {
     expiry: 2,
     length: 6,
@@ -45,7 +45,6 @@ export class OTPService {
         ussd_code: ussd_code,
       };
     } catch (error) {
-      console.info(error);
       throw new BadRequestException(this.exception_message);
     }
   }

@@ -5,12 +5,24 @@ There's also organization/branch management to make your life easier in handling
 
 
 ## TO DO
-- [ ] Add decorator to check if user exists before sending/verifying otp
-- [ ] JWT token generation
-- [ ] Set up queue to handle sending of notification/messages
+- [x] Add guard to check if user exists before sending/verifying otp
+- [x] JWT token generation
+- [x] Set up queue to handle sending of notification/messages
+  - [x] Send OTP Messages
+  - [ ] Send successful onboarding sms/email??
 - [ ] Cleanup after onboarding user
 - [ ] Roles and permission
+  - [ ] Role CRUD
+  - [ ] Permission CRUD
+  - [ ] Role and Permission Relation
+  - [ ] Permisison and User Relation
+  - [ ] Role Guard
+  - [ ] Permission Guard
 - [ ] Subscription or payments??
+- [x] Exception Filter
+- [x] AuthenticationGuard
+- [ ] Logging
+- [x] Complete onboarding 
 
 
 ## Description

@@ -4,20 +4,20 @@ import { CreateUserDTO } from "./dtos/create-user.dto";
 
 @Injectable()
 export class UserService {
-  constructor(private prismaServivce: PrismaService) {}
+  constructor(private prismaService: PrismaService) {}
 
   async getUsers() {
-    return await this.prismaServivce.user.findMany();
+    return await this.prismaService.user.findMany();
   }
 
-  async createNewUser(data: CreateUserDTO) {
-    return await this.prismaServivce.user.create({
-      data: {
-        ...data,
-        roles: {
-          connect: data?.roles?.map((role) => ({ id: role.id })),
-        },
-      },
-    });
-  }
+  // async createNewUser(data: CreateUserDTO) {
+  //   return await this.prismaService.user.create({
+  //     data: {
+  //       ...data,
+  //       // roles: {
+  //       //   connect: data?.roles?.map((role) => ({ id: role.id })),
+  //       // },
+  //     },
+  //   });
+  // }
 }
