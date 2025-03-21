@@ -3,7 +3,7 @@ import { REQUEST } from "@nestjs/core";
 import { Prisma } from "@prisma/client";
 import { Request } from "express";
 import { PrismaService } from "src/services/prisma.service";
-import { StoreSubscription } from "./dto/store-subscription.dto";
+import { StoreSubscription } from "./dto/store-package.dto";
 
 @Injectable()
 export class PackagesService {
@@ -162,9 +162,10 @@ export class PackagesService {
   }
 
   async findPackage(id: string) {
-    const organizationId = this.request?.["organizationId"];
+    const _organizationId = this.request?.["organizationId"];
+
     return await this.prismaService.subscriptionPackage.findFirstOrThrow({
-      where: { packageId: id, organizationId: organizationId },
+      where: { packageId: id, organizationId: _organizationId },
     });
   }
 }
