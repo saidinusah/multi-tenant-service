@@ -17,7 +17,6 @@ export class StoreMember {
   @IsNotEmpty()
   phoneNumber: string;
 
-  @IsOptional()
   @IsUUID()
   packageId?: string;
 }

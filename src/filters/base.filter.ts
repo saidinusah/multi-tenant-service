@@ -26,8 +26,6 @@ export class AppExceptionFilter implements ExceptionFilter {
     const meta = err?.meta || {};
     let errors = err?.errors ?? [];
 
-    console.log("exception", exception);
-
     if (exception instanceof UnprocessableEntityException) {
       errors = (exception.getResponse() as any)?.errors;
     }
