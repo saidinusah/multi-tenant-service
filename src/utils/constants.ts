@@ -33,3 +33,7 @@ export const RENEWAL_PERIODS: Record<RenewalPeriods, number> = {
   BI_ANNUALLY: 182,
   ANNUALLY: 365,
 } as const;
+
+export const ERROR_MESSAGES = {
+  NOT_FOUND: "Resource not found",
+};
