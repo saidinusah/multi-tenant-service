@@ -26,6 +26,7 @@ enum Roles {
 }
 
 enum RenewalPeriods {
+  DAILY
   WEEKLY
   MONTHLY
   QUARTERLY
@@ -92,6 +93,10 @@ model User {
   packagesCreated SubscriptionPackage[] @relation("createdPackages")
   packagesUpdated SubscriptionPackage[] @relation("updatedPackages")
 
+  membersCreated Member[]       @relation("createdMembers")
+  membersUpdated Member[]       @relation("updatedMembers")
+  Subscription   Subscription[]
+
   @@map("users")
 }
 
@@ -105,7 +110,7 @@ model SubscriptionPackage {
   updatedByUser User?  @relation("updatedPackages", fields: [updatedByUserId], references: [userId])
 
   description     String?
-  deactivedAt     DateTime?      
+  deactivedAt     DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime?      @updatedAt
   renewalPeriod   String
@@ -125,6 +130,10 @@ model Subscription {
   memberId       String              @db.ObjectId
   package        SubscriptionPackage @relation(fields: [packageId], references: [id])
   packageId      String              @db.ObjectId
+  createdAt      DateTime            @default(now())
+  expiresAt      DateTime
+  createdBy      String?
+  createdByUser  User?               @relation(fields: [createdBy], references: [userId])
 
   @@map("subscriptions")
 }
@@ -133,12 +142,15 @@ model Member {
   id       String @id @default(auto()) @map("_id") @db.ObjectId
   memberId String @unique @default(uuid())
 
-  foreNames   String
-  lastName    String
-  phoneNumber String
-  idNumber    String
-  createdBy   String
-  updatedBy   String?
+  foreNames       String
+  lastName        String
+  phoneNumber     String
+  idNumber        String
+  createdByUserId String
+  updatedByUserId String?
+
+  createdByUser User  @relation("createdMembers", fields: [createdByUserId], references: [userId])
+  updatedByUser User? @relation("updatedMembers", fields: [updatedByUserId], references: [userId])
 
   createdAt      DateTime       @default(now())
   updatedAt      DateTime?      @updatedAt
@@ -147,6 +159,6 @@ model Member {
   subscriptions  Subscription[]
 
   @@unique([organizationId, phoneNumber, idNumber])
-  @@index([createdBy, organizationId, memberId, phoneNumber])
+  @@index([createdByUserId, organizationId, memberId, phoneNumber])
   @@map("members")
 }

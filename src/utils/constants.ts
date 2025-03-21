@@ -1,3 +1,5 @@
+import { Prisma, RenewalPeriods } from "@prisma/client";
+
 export const REGEXES = {
   GHANA_POST_GPS: /^[A-Z]{2}-\d{3}-\d{4}$/,
   GHANA_PHONE_NUMBER:
@@ -22,3 +24,12 @@ export const JobNames = {
     REMOVE_ITEM: "REMOVE_ITEM",
   },
 };
+
+export const RENEWAL_PERIODS: Record<RenewalPeriods, number> = {
+  DAILY: 1,
+  WEEKLY: 7,
+  MONTHLY: 30,
+  QUARTERLY: 91,
+  BI_ANNUALLY: 182,
+  ANNUALLY: 365,
+} as const;

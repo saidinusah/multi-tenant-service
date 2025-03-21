@@ -1,10 +1,17 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
 import { Request } from "express";
 import { PrismaService } from "src/services/prisma.service";
 import { StoreMember } from "./dto/store-member.dto";
 import { Prisma } from "@prisma/client";
-import { PackagesService } from "src/subscriptions/packages.service";
+import { PackagesService } from "src/packages/packages.service";
+import { RENEWAL_PERIODS } from "src/utils/constants";
+import { addDays } from "date-fns";
 
 @Injectable()
 export class MembersService {
@@ -17,30 +24,42 @@ export class MembersService {
   async createMember(data: StoreMember) {
     const userId = this.request?.["userId"];
     const organizationId = this.request?.["organizationId"];
+    const _subscriptionPackage = await this.packagesService.findPackage(
+      data.packageId,
+    );
 
-    if (data.packageId) {
-      await this.packagesService.findPackage(data.packageId);
+    if (!_subscriptionPackage) {
+      throw new BadRequestException("Please confirm package details");
     }
-    let payload: Prisma.MemberCreateInput = {
+
+    const payload: Prisma.MemberCreateInput = {
       foreNames: data.foreNames,
       lastName: data.lastName,
       idNumber: data.idNumber,
       phoneNumber: data.phoneNumber,
-      createdBy: userId,
+      createdByUser: { connect: { userId } },
       organization: {
         connect: { organizationId },
       },
-    };
-    if (data.packageId) {
-      payload = {
-        ...payload,
-        subscriptions: {
-          connect: {
-            subscriptionId: data.packageId,
+      subscriptions: {
+        create: {
+          package: {
+            connect: {
+              packageId: data.packageId,
+            },
+          },
+          expiresAt: addDays(
+            new Date().setHours(23, 59, 59),
+            RENEWAL_PERIODS[_subscriptionPackage.renewalPeriod],
+          ),
+          createdByUser: {
+            connect: {
+              userId,
+            },
           },
         },
-      };
-    }
+      },
+    };
 
     const createdMember = await this.prismaService.member.create({
       data: payload,
@@ -61,7 +80,9 @@ export class MembersService {
       },
       data: {
         ...data,
-        updatedBy: userId,
+        updatedByUser: {
+          connect: { userId: userId },
+        },
       },
     });
     return {
@@ -84,7 +105,12 @@ export class MembersService {
 
   async getMember(id: string) {
     const organizationId = this.request?.["organizationId"];
-    return await this.retrieveMember(id, organizationId);
+    return await this.prismaService.member.findFirstOrThrow({
+      where: { memberId: id, organizationId },
+      include: {
+        subscriptions: true,
+      },
+    });
   }
 
   private async retrieveMember(id: string, organizationId: string) {

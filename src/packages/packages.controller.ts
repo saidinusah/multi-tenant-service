@@ -9,9 +9,9 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { StoreSubscription } from "./dto/store-subscription.dto";
-import { PackagesService } from "./packages.service";
 import { AuthGuard } from "src/auth/guards/auth.guard";
+import { StoreSubscription } from "./dto/store-package.dto";
+import { PackagesService } from "./packages.service";
 
 @Controller("packages")
 @UseGuards(AuthGuard)

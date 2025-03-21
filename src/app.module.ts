@@ -9,7 +9,7 @@ import { MembersModule } from "./members/member.module";
 import { RoleModule } from "./roles/roles.module";
 import { UserModule } from "./users/user.module";
 import { validate } from "./utils/env.validation";
-import { PackagesModule } from "./subscriptions/packages.module";
+import { PackagesModule } from "./packages/packages.module";
 
 @Module({
   imports: [
