@@ -22,24 +22,35 @@ export class SubscriptionService {
     @Inject(REQUEST) private request: Request,
   ) {}
 
-  async createSubscripton(data: CreateSubscriptionDto) {
+  async createSubscription(data: CreateSubscriptionDto) {
     /**
      * TODO:: add check to see if it's a renewal
      * so sms copy is dynamically changed
      */
     //
     const userId = this.request?.["userId"];
-    const _subsubscriptionPackage = await this.packagesService.findPackage(
+    // check if package is valid
+    const _subscriptionPackage = await this.packagesService.findPackage(
       data.packageId,
     );
-    if (!_subsubscriptionPackage) {
+    if (!_subscriptionPackage) {
       throw new UnprocessableEntityException({
         errors: [{ field: "packageId", errors: ["Check field"] }],
       });
     }
 
-    const expiresInDays =
-      RENEWAL_PERIODS[_subsubscriptionPackage.renewalPeriod];
+    // check if member doesn't have an active subscription
+    const _memberDetails = await this.memberService.getMember(data.memberId);
+    const currentActivePackage = _memberDetails.subscriptions.find(
+      (subscription) => isAfter(new Date(), subscription.expiresAt),
+    );
+
+    // if they have an active one, we throw an error
+    if (currentActivePackage) {
+      throw new BadRequestException("Member has an active subscription");
+    }
+
+    const expiresInDays = RENEWAL_PERIODS[_subscriptionPackage.renewalPeriod];
     const createdSubscription = await this.prismaService.subscription.create({
       data: {
         package: {
@@ -67,32 +78,20 @@ export class SubscriptionService {
     };
   }
 
-  async renewSubscription(data: CreateSubscriptionDto) {
-    const memberDetails = await this.memberService.getMember(data.memberId);
+  // idk if this is important because if it's pay as you go then cool,
+  // but if we're looking at fixed period, they can just run it out
+  async cancelSubscription(subscriptionId: string) {
+    const _subscription = await this.prismaService.subscription.findFirst({
+      where: {
+        subscriptionId,
+      },
+    });
 
-    const currentActivePackage = memberDetails.subscriptions.find(
-      (subscription) => isAfter(new Date(), subscription.expiresAt),
-    );
-
-    if (currentActivePackage) {
-      throw new BadRequestException("Member has an active subscription");
+    if (!_subscription) {
+      throw new NotFoundException(ERROR_MESSAGES["NOT_FOUND"]);
     }
 
-    await this.createSubscripton(data);
-  }
-
-  async cancelSubscription(subscriptionId: string) {
-    await this.prismaService.subscription
-      .findFirstOrThrow({
-        where: {
-          subscriptionId,
-        },
-      })
-      .catch((error) => {
-        // TODO: log error
-        throw new NotFoundException(ERROR_MESSAGES["NOT_FOUND"]);
-      });
-
+    //TODO:: come back to this query if i make up my mind about cancellation
     await this.prismaService.subscription.update({
       where: {
         subscriptionId,

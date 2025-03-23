@@ -8,14 +8,9 @@ import { AuthGuard } from "src/auth/guards/auth.guard";
 export class SubscriptionController {
   constructor(private subscriptionService: SubscriptionService) {}
 
-  @Post()
+  @Post(["", "renew"])
   async createSubscription(@Body() data: CreateSubscriptionDto) {
-    return await this.subscriptionService.createSubscripton(data);
-  }
-
-  @Post("renew")
-  async renewSubscription(@Body() data: CreateSubscriptionDto) {
-    return await this.subscriptionService.renewSubscription(data);
+    return await this.subscriptionService.createSubscription(data);
   }
 
   @Post(":subscriptionId")
