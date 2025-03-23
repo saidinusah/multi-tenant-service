@@ -9,11 +9,12 @@ import {
 import { HttpAdapterHost } from "@nestjs/core";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
-const defaultStatusCode: HttpStatus = HttpStatus.BAD_REQUEST;
-const defaultServerMessage = "An error occured while processing your request";
+const defaultServerMessage = "An error occurred while processing your request";
+
 @Catch()
 export class AppExceptionFilter implements ExceptionFilter {
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
+
   errCode = "";
 
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -25,6 +26,7 @@ export class AppExceptionFilter implements ExceptionFilter {
     let message = err?.message ?? defaultServerMessage;
     const meta = err?.meta || {};
     let errors = err?.errors ?? [];
+    console.log("exception", exception);
 
     if (exception instanceof UnprocessableEntityException) {
       errors = (exception.getResponse() as any)?.errors;
@@ -33,24 +35,28 @@ export class AppExceptionFilter implements ExceptionFilter {
     if (exception instanceof PrismaClientKnownRequestError) {
       this.errCode = exception.code;
       status = HttpStatus.UNPROCESSABLE_ENTITY;
-      message = exception.message;
+      switch (exception.code) {
+        case "P2010":
+          if (exception?.meta?.modelName === "User") {
+            message = "We are unable to sign you up, please contact support";
+          } else {
+            message = "We can't process your request, please contact support";
+          }
+          break;
+        default:
+          message = "We can't process your request, please contact support";
+      }
     } else {
       status = HttpStatus.BAD_REQUEST;
     }
     if (
       !(exception instanceof HttpException) &&
-      !(exception instanceof AppExceptionFilter)
+      !(exception instanceof AppExceptionFilter) &&
+      !(exception instanceof PrismaClientKnownRequestError)
     ) {
       message = defaultServerMessage;
     }
 
-    const responseBody = {
-      status:
-        status === HttpStatus.INTERNAL_SERVER_ERROR
-          ? defaultStatusCode
-          : status,
-      message: ctx.getResponse()?.message || defaultServerMessage,
-    };
     return response.status(status).json({ message, errors });
   }
 }

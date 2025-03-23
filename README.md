@@ -15,7 +15,7 @@ There's also organization/branch management to make your life easier in handling
   - [ ] Role CRUD
   - [ ] Permission CRUD
   - [ ] Role and Permission Relation
-  - [ ] Permisison and User Relation
+  - [ ] Permission and User Relation
   - [ ] Role Guard
   - [ ] Permission Guard
 - [ ] Subscription or payments??
@@ -23,6 +23,11 @@ There's also organization/branch management to make your life easier in handling
 - [x] AuthenticationGuard
 - [ ] Logging
 - [x] Complete onboarding 
+- [ ] Subscriptions Modules
+- [ ] Payments
+  - [ ] Repayments
+  - [ ] Notifications after processing payments
+  - [ ] Notifications when payment is due
 
 
 ## Description

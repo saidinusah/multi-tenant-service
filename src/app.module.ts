@@ -10,6 +10,7 @@ import { RoleModule } from "./roles/roles.module";
 import { UserModule } from "./users/user.module";
 import { validate } from "./utils/env.validation";
 import { PackagesModule } from "./packages/packages.module";
+import { SubscriptionsModule } from "./subscriptions/subscriptions.module";
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { PackagesModule } from "./packages/packages.module";
     AuthModule,
     MembersModule,
     PackagesModule,
+    SubscriptionsModule
   ],
   controllers: [],
   providers: [

@@ -158,7 +158,7 @@ model Member {
   organizationId String
   subscriptions  Subscription[]
 
-  @@unique([organizationId, phoneNumber, idNumber])
+  @@unique([organizationId, phoneNumber, idNumber], map: "unique_member_per_org")
   @@index([createdByUserId, organizationId, memberId, phoneNumber])
   @@map("members")
 }
