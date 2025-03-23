@@ -5,10 +5,11 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { AuthGuard } from "src/auth/guards/auth.guard";
-import { StoreMember } from "./dto/store-member.dto";
+import { StoreMember, UpdateMember } from "./dto/store-member.dto";
 import { MembersService } from "./members.service";
 
 @Controller("members")
@@ -22,8 +23,11 @@ export class MembersController {
   }
 
   @Get()
-  async getAllMembers() {
-    return await this.membersService.getAllMembers();
+  async getAllMembers(
+    @Query("limit") limit?: number,
+    @Query("page") page?: number,
+  ) {
+    return this.membersService.getAllMembers(page, limit);
   }
 
   @Post()
@@ -32,7 +36,7 @@ export class MembersController {
   }
 
   @Patch(":id")
-  async updateMember(@Body() data: StoreMember, @Param("id") id: string) {
+  async updateMember(@Body() data: UpdateMember, @Param("id") id: string) {
     return await this.membersService.updateMember(data, id);
   }
 }

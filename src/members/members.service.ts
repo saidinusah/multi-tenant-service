@@ -10,8 +10,8 @@ import { addDays } from "date-fns";
 import { Request } from "express";
 import { PackagesService } from "src/packages/packages.service";
 import { PrismaService } from "src/services/prisma.service";
-import { RENEWAL_PERIODS } from "src/utils/constants";
-import { StoreMember } from "./dto/store-member.dto";
+import { ERROR_MESSAGES, RENEWAL_PERIODS } from "src/utils/constants";
+import { StoreMember, UpdateMember } from "./dto/store-member.dto";
 
 @Injectable()
 export class MembersService {
@@ -72,16 +72,20 @@ export class MembersService {
     };
   }
 
-  async updateMember(data: StoreMember, id: string) {
+  async updateMember(data: UpdateMember, id: string) {
     const organizationId = this.request?.["organizationId"];
     const userId = this.request?.["userId"];
+    console.log("organizationId", organizationId);
     await this.retrieveMember(id, organizationId);
     const updatedMember = await this.prismaService.member.update({
       where: {
         memberId: id,
       },
       data: {
-        ...data,
+        foreNames: data.foreNames,
+        lastName: data.lastName,
+        phoneNumber: data.phoneNumber,
+        idNumber: data.idNumber,
         updatedByUser: {
           connect: { userId: userId },
         },
@@ -96,7 +100,7 @@ export class MembersService {
   async getAllMembers(page = 1, limit = 10) {
     const organizationId = this.request?.["organizationId"];
     const offset = (page - 1) * limit;
-    return await this.prismaService.member.findMany({
+    return this.prismaService.member.findMany({
       take: limit,
       skip: offset,
       where: {
@@ -107,21 +111,28 @@ export class MembersService {
 
   async getMember(id: string) {
     const organizationId = this.request?.["organizationId"];
-    return await this.prismaService.member.findFirstOrThrow({
+    const _memberDetails = await this.prismaService.member.findFirst({
       where: { memberId: id, organizationId },
       include: {
         subscriptions: true,
       },
     });
+
+    if (!_memberDetails) {
+      throw new NotFoundException(ERROR_MESSAGES["NOT_FOUND"]);
+    }
+    return _memberDetails;
   }
 
-  private async retrieveMember(id: string, organizationId: string) {
-    return await this.prismaService.member
-      .findFirstOrThrow({
-        where: { memberId: id, organizationId },
-      })
-      .catch(() => {
-        throw new NotFoundException("Resource not found");
-      });
+  private async retrieveMember(memberId: string, organizationId: string) {
+    console.log("args", { memberId, organizationId });
+    const member = await this.prismaService.member.findFirst({
+      where: { memberId, organizationId },
+    });
+
+    if (!member) {
+      throw new NotFoundException(ERROR_MESSAGES["NOT_FOUND"]);
+    }
+    return member;
   }
 }
