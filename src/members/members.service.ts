@@ -5,13 +5,13 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
-import { Request } from "express";
-import { PrismaService } from "src/services/prisma.service";
-import { StoreMember } from "./dto/store-member.dto";
 import { Prisma } from "@prisma/client";
-import { PackagesService } from "src/packages/packages.service";
-import { RENEWAL_PERIODS } from "src/utils/constants";
 import { addDays } from "date-fns";
+import { Request } from "express";
+import { PackagesService } from "src/packages/packages.service";
+import { PrismaService } from "src/services/prisma.service";
+import { RENEWAL_PERIODS } from "src/utils/constants";
+import { StoreMember } from "./dto/store-member.dto";
 
 @Injectable()
 export class MembersService {
@@ -64,6 +64,8 @@ export class MembersService {
     const createdMember = await this.prismaService.member.create({
       data: payload,
     });
+
+    // TODO:: add event to trigger an sms saying they've onboarded with the package
     return {
       message: "Member created",
       id: createdMember.memberId,
